@@ -3,6 +3,8 @@
 import time, os
 from datetime import datetime
 
+import json
+
 from sense_hat import SenseHat
 from picamera2 import Picamera2
 
@@ -28,6 +30,9 @@ picam2 = Picamera2()
 picam2.configure(picam2.create_still_configuration())
 picam2.start()
 print("Camera started. Image will be taken once temperature drops")
+STATE_DIR = os.path.join(BASE_DIR, "state")
+os.makedirs(STATE_DIR, exist_ok=True)
+STATE_PATH = os.path.join(STATE_DIR, "environment.json")
 
 def capture_photo():
     print("Capturing Environment Image")
@@ -36,6 +41,21 @@ def capture_photo():
     sense.clear(0,0,0)
     print("Image Saved to: ", IMAGE_PATH)
 
+def save_state(image_url=None):
+    now = datetime.now()
+    celcius = round(sense.temperature, 2)
+    payload = {
+        "celcius": round(celcius, 2),
+        "fahrenheit": round(1.8 * celcius + 32, 2),
+        "image":image_url,# path to the image file
+        "ts": int(now.timestamp()), 
+        "iso": now.isoformat(timespec="seconds") 
+    }
+    with open(STATE_PATH, "w") as f:
+        json.dump(payload, f)
+    print("State saved:", payload)
+    
+    
 try:
     while True:
         temp = sense.get_temperature()
