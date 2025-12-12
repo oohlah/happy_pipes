@@ -6,6 +6,8 @@ from datetime import datetime
 from sense_hat import SenseHat
 from picamera2 import Picamera2
 
+from upload_cloudinary import upload_image
+
 #use os to set up base and static folder 
 
 #determine base folder where script is running - the absolute path
@@ -41,6 +43,8 @@ try:
         if temp < 26.5:
             print(f"Temperature: {temp} Celcius")
             capture_photo()
+            url = upload_image(IMAGE_PATH)
+            save_state(url)
             sense.clear(255,0,0)
             time.sleep(30)
         elif temp > 26.5:
