@@ -10,7 +10,7 @@ BLYNK_AUTH= os.getenv("BLYNK_AUTH")
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
 #reading every 60 - timeout after 61 sec
-INACTIVITY_TIMEOUT = 30
+INACTIVITY_TIMEOUT = 60
 blynk.last_activity = time()
 
 #v1 is switch to turn off after inactivity
@@ -29,13 +29,12 @@ if __name__ == "__main__":
     print("Blynk application started. Listening for events...")
     try:
         while True:
-            blynk.run()  # Process Blynk events
+            blynk.run()
+            blynk.virtual_write(0, sense.temperature)
             now = time()
-            blynk.virtual_write(0,sense.temperature) 
-            #exit if no activity
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
                 print(f"No activity for {INACTIVITY_TIMEOUT} seconds. Exiting.")
                 break
-        sleep(2)  # delay for CPU usage
+            sleep(2)
     except KeyboardInterrupt:
         print("Blynk application stopped.")
