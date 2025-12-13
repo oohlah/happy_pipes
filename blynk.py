@@ -2,6 +2,7 @@ import BlynkLib, os
 from time import time, sleep
 from sense_hat import SenseHat
 
+
 sense = SenseHat()
 sense.clear()
 
@@ -9,8 +10,9 @@ BLYNK_AUTH= os.getenv("BLYNK_AUTH")
 
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
-#reading every 60 - timeout after 61 sec
-INACTIVITY_TIMEOUT = 60
+
+#reading every 30
+INACTIVITY_TIMEOUT = 30
 blynk.last_activity = time()
 
 #v1 is switch to turn off after inactivity
@@ -29,8 +31,13 @@ if __name__ == "__main__":
     print("Blynk application started. Listening for events...")
     try:
         while True:
-            blynk.run()
-            blynk.virtual_write(0, sense.temperature)
+            blynk.run() #run Blynk
+            temp = sense.get_temperature() #get temperature from sense_hat
+            blynk.virtual_write(0, temp) #write temperature
+            print(f"Temperature: {temp}°C")
+            if temp < 26.5:
+                blynk.log_event("warning_temp")
+
             now = time()
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
                 print(f"No activity for {INACTIVITY_TIMEOUT} seconds. Exiting.")

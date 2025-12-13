@@ -61,7 +61,7 @@ try:
         temp = sense.get_temperature()
 
         if temp < 26.5:
-            print(f"Temperature: {temp} Celcius")
+            print(f"Warning Temperature is below {temp} Celcius")
             capture_photo()
             url = upload_image(IMAGE_PATH)
             save_state(url)
