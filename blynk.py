@@ -36,7 +36,7 @@ if __name__ == "__main__":
             blynk.virtual_write(0, temp) #write temperature
             print(f"Temperature: {temp}°C")
             if temp < 26.5:
-                blynk.log_event("warning_temp")
+                blynk.log_event("warning_temp_event")
 
             now = time()
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
