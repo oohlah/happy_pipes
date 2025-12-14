@@ -8,7 +8,10 @@ import json
 from sense_hat import SenseHat
 from picamera2 import Picamera2
 
+from environment_sensors import get_dew_point
+
 from upload_cloudinary import upload_image
+
 
 #use os to set up base and static folder 
 
@@ -44,9 +47,12 @@ def capture_photo():
 def save_state(image_url=None):
     now = datetime.now()
     celcius = round(sense.temperature, 2)
+    humidity = round(sense.humidity, 2)
+    dew_point = get_dew_point(celcius, humidity)
     payload = {
-        "celcius": round(celcius, 2),
-        "fahrenheit": round(1.8 * celcius + 32, 2),
+        "temp celcius": round(celcius, 2),
+        "temp fahrenheit": round(1.8 * celcius + 32, 2),
+        "Dew Point Celsius": round(dew_point, 2),
         "image":image_url,# path to the image file
         "ts": int(now.timestamp()), 
         "iso": now.isoformat(timespec="seconds") 
