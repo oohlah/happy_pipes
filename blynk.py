@@ -2,6 +2,8 @@ import BlynkLib, os
 from time import time, sleep
 from sense_hat import SenseHat
 
+from environment_sensors import get_dew_point
+
 from upload_cloudinary import image_url
 
 #import requests library for url encoding
@@ -63,11 +65,23 @@ if __name__ == "__main__":
             blynk.run() #run Blynk
             image = image_url() #store image in url variable
             temp = sense.get_temperature() #get temperature from sense_hat
+
+            humidity = sense.get_humidity()
+            dew_point = get_dew_point(temp, humidity)
+            blynk.virtual_write(3, dew_point) #write dew_point to Blynk
+
+            #test to see when dew_point below 16 - REMOVE LINE
+            dew_point = 15
+            if dew_point < 16:
+                blynk.log_event("warning_dew_point_event")
+                print(f"Dew Point: {dew_point}")
+
             blynk.virtual_write(0, temp) #write temperature
             print(f"Temperature: {temp}°C")
             if temp < 26.5:
                 blynk.log_event("warning_temp_event")
                 send_image()
+            
 
             now = time()
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
