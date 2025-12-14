@@ -33,8 +33,11 @@ def handle_v1_write(value):
 
 image_sent = False
 
+#WANT TO ADD INTERVAL TIMING TO IMAGE BEING SENT - EVERY 30 MINS
+
+#send image function
 def send_image():
-     global image_sent
+     global image_sent 
      temp = sense.get_temperature()
      if temp < 26.5 and not image_sent:
         image = image_url() #store image in url variable
@@ -42,13 +45,13 @@ def send_image():
         
         url = f"https://blynk.cloud/external/api/update?token={BLYNK_AUTH}&pin=V2&value={image}"
 
-        
+        #encode url using requests library -safely send special characters
         encoded_data = requests.models.RequestEncodingMixin._encode_params(url)
         print(encoded_data)
        
         try:
-            response = requests.get(encoded_data)
-            image_sent = True
+            response = requests.get(encoded_data) #send url as get request to Blynk
+            image_sent = True #block images from being sent repeatedly
         except Exception as e:
             print(f"Failed to send image URL")
         
