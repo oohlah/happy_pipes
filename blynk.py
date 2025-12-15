@@ -15,7 +15,7 @@ blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
 #determine base folder where script is running - the absolute path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
-STATE_PATH = os.path.join(BASE_DIR, "state", "environment.json")
+STATE_PATH = os.path.join(BASE_DIR, "state", "environment.json") #safely join base with json file
 
 #reading every 30
 INACTIVITY_TIMEOUT = 30
@@ -35,6 +35,7 @@ def handle_v1_write(value):
 
 image_sent = False
 
+#read environment stats from json file
 def read_state():
             with open(STATE_PATH, "r") as f:
                 return json.load(f)
