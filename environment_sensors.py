@@ -11,13 +11,13 @@ def get_dew_point(temp, humidity):
     alpha = ((A * temp) / (B + temp)) + math.log(humidity/100.0)
     return (B * alpha) / (A - alpha)
 
-
+#funcion returns environemnt reading in python dictionary
 def get_env_stats():
     temp = round(sense.get_temperature(), 2)
     humidity = round(sense.get_humidity(), 2)
     dew = round(get_dew_point(temp, humidity), 2)
 
-    return {
+    return { 
         "temperature_c": temp,
         "humidity": humidity,
         "dew_point": dew
