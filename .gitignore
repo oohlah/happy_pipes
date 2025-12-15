@@ -1,2 +1,5 @@
 # ignore all JSON files when pushing to github
 *.json
+
+#ignore all files ending in .jpg
+*.jpg

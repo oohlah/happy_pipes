@@ -5,6 +5,7 @@ from upload_cloudinary import image_url
 
 import json
 
+from env_sensors2 import get_env_stats
 #import requests library for url encoding
 import requests
 
@@ -98,6 +99,3 @@ if __name__ == "__main__":
             sleep(2)
     except KeyboardInterrupt:
         print("Blynk application stopped.")
-        
-        
- 

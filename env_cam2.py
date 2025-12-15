@@ -7,7 +7,7 @@ import json
 
 from picamera2 import Picamera2
 
-from environment_sensors import get_env_stats
+from env_sensors2 import get_env_stats
 
 from upload_cloudinary import upload_image
 
@@ -73,5 +73,3 @@ except KeyboardInterrupt:
     print("Exiting")
 finally:
     picam2.stop()
-
-
