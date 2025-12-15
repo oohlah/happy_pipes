@@ -64,9 +64,9 @@ try:
                 capture_photo()
                 url = upload_image(IMAGE_PATH)
                 save_state(url)
-                time.sleep(30) #Don't take another image for 30mins
+                time.sleep(10) #Don't take another image for 30mins
             else:
-                 time.sleep(30) #sleep for 30 and then check temp again
+                 time.sleep(10) #sleep for 30 and then check temp again
                  url = upload_image(IMAGE_PATH)
                  
 except KeyboardInterrupt:

@@ -23,6 +23,13 @@ def get_env_stats():
         "dew_point": dew
     }
 
+#LED RED
+def led_red():
+    sense.clear(255,0,0)
+
+#LED GREEN
+def led_green():
+    sense.clear(0,255,0)
 
 
 

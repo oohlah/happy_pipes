@@ -5,6 +5,8 @@ from upload_cloudinary import image_url
 
 import json
 
+from environment_sensors import led_green, led_red
+
 #import requests library for url encoding
 import requests
 
@@ -71,7 +73,8 @@ if __name__ == "__main__":
     try:
         while True:
             env = read_state()
-
+            print(read_state())
+            led_green()
             blynk.run() #run Blynk
             image = image_url() #store image in url variable
             temp = env["environment"]["temperature_c"]  #get temperature from from function
@@ -88,6 +91,7 @@ if __name__ == "__main__":
             blynk.virtual_write(0, temp) #write temperature
             print(f"Temperature: {temp}°C")
             if temp < 26.5:
+                led_red()
                 blynk.log_event("warning_temp_event")
                 send_image()
             
@@ -96,7 +100,7 @@ if __name__ == "__main__":
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
                 print(f"No activity for {INACTIVITY_TIMEOUT} seconds. Exiting.")
                 break
-            sleep(2)
+            sleep(10)
     except KeyboardInterrupt:
         print("Blynk application stopped.")
         
