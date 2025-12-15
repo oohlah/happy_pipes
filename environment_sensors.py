@@ -13,7 +13,7 @@ def get_dew_point(temp, humidity):
 
 #funcion returns environemnt reading in python dictionary
 def get_env_stats():
-    temp = round(sense.get_temperature(), 2)
+    temp = round(sense.get_temperature(),)
     humidity = round(sense.get_humidity(), 2)
     dew = round(get_dew_point(temp, humidity), 2)
 
