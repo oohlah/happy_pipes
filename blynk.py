@@ -5,10 +5,11 @@ from upload_cloudinary import image_url
 
 import json
 
-from env_sensors2 import led_green, led_red
+from environment_sensors import led_green, led_red
 
 #import requests library for url encoding
 import requests
+
 
 BLYNK_AUTH= os.getenv("BLYNK_AUTH")
 
@@ -43,53 +44,63 @@ def read_state():
 
 #WANT TO ADD INTERVAL TIMING TO IMAGE BEING SENT - EVERY 30 MINS
 
-#send image function
 def send_image():
-     global image_sent 
-     env = read_state()
-     temp = env["environment"]["temperature_c"]
+    global image_sent
 
-     if temp < 26.5 and not image_sent:
-        image = image_url() #store image in url variable
-        print(f"Sending image URL to Blynk: {image}")
+    # Only send once per event
+    if image_sent:
+        return
+
+    try:
+
+        image = image_url()
         
-        url = f"https://blynk.cloud/external/api/update?token={BLYNK_AUTH}&pin=V2&value={image}"
+        response = requests.get(
+            "https://blynk.cloud/external/api/update/property",
+            params={
+                "token": BLYNK_AUTH,
+                "pin": "V2",
+                "urls": image
+            }
+        )
 
-        #encode url using requests library -safely send special characters
-        encoded_data = requests.models.RequestEncodingMixin._encode_params(url)
-     else:
-        sleep(60)
+        print(f"Status: {response.status_code}, response: {response.text}")
 
-        try:
-            response = requests.get(encoded_data) #send url as get request to Blynk
-            image_sent = True #block images from being sent repeatedly
-        except Exception as e:
-            print(f"Failed to send image URL")
-        
+        if response.status_code == 200:
+            image_sent = True
+        else:
+            print(f"Failed to send image. Will retry later")
+            sleep(10)
+            image_sent = False
+
+    except requests.RequestException as e:
+        print(f"Exception sending image: {e}")
+        image_sent = False
+
+
 
 if __name__ == "__main__":
     print("Blynk application started. Listening for events...")
     try:
         while True:
-            env = read_state()
-            print(read_state())
+            env = read_state() 
+            print(f"{env}")
             led_green()
             blynk.run() #run Blynk
-            image = image_url() #store image in url variable
-            temp = env["environment"]["temperature_c"]  #get temperature from from function
+            temp = env["temperature_c"]  #get temperature from state
 
-            #HARDCODING DEW POINT FIX THIS LATER
-            dew_point = env["environment"]["dew_point"]  # should be - env["dew"]
+            #read dew_point from json
+            dew_point = env["dew_point_c"]  #store env.dew_point_c in dew_point
             blynk.virtual_write(3, dew_point) #write dew_point to Blynk
 
-            #test to see when dew_point below 16 - REMOVE LINE
-            if dew_point < 16:
+            #test to see when dew_point below 13 - HARDCODED FOR NOW
+            if dew_point < 13:
                 blynk.log_event("warning_dew_point_event")
                 print(f"Dew Point: {dew_point}")
 
             blynk.virtual_write(0, temp) #write temperature
             print(f"Temperature: {temp}°C")
-            if temp < 26.5:
+            if temp <= 0:
                 led_red()
                 blynk.log_event("warning_temp_event")
                 send_image()

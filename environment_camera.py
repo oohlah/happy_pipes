@@ -85,7 +85,7 @@ try:
                 capture_photo()
                 url = upload_image(IMAGE_PATH)
                 save_state(url)  # Save env stats + image URL
-                time.sleep(1800)  # Wait 30 mins before next photo
+                time.sleep(10)  # Wait short time to test camera
 
 
             time.sleep(1)
