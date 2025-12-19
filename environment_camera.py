@@ -5,9 +5,9 @@ from datetime import datetime
 
 import json
 
-from picamera2 import Picamera2
+from pi_camera_copy import Picamera2
 
-from environment_sensors import get_env_stats
+from env_sensors2 import get_env_stats
 
 from upload_cloudinary import upload_image
 
@@ -26,7 +26,7 @@ IMAGE_PATH = os.path.join(STATIC_DIR, "last_env_image.jpg")
 
 
 picam2 = Picamera2()
-picam2.configure(picam2.create_still_configuration())
+picam2.configure(picam2.create_still_configuration(main={"size": (3280,2464)}))
 picam2.start()
 print("Camera started. Image will be taken once temperature drops")
 STATE_DIR = os.path.join(BASE_DIR, "state")
@@ -64,9 +64,9 @@ try:
                 capture_photo()
                 url = upload_image(IMAGE_PATH)
                 save_state(url)
-                time.sleep(10) #Don't take another image for 30mins
+                time.sleep(5) #Don't take another image for 30mins
             else:
-                 time.sleep(10) #sleep for 30 and then check temp again
+                 time.sleep(5) #sleep for 30 and then check temp again
                  url = upload_image(IMAGE_PATH)
                  
 except KeyboardInterrupt:

@@ -5,11 +5,10 @@ from upload_cloudinary import image_url
 
 import json
 
-from environment_sensors import led_green, led_red
+from env_sensors2 import led_green, led_red
 
 #import requests library for url encoding
 import requests
-
 
 BLYNK_AUTH= os.getenv("BLYNK_AUTH")
 
