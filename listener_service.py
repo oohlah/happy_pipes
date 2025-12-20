@@ -62,8 +62,6 @@ def handle_data(data):
         save_csv(env_data)
 
 if __name__ == "__main__":
-    # start_logging()
-
     listener = SensorListener(port=5000)
     listener.callback = handle_data
     listener.start()

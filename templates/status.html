@@ -1,0 +1,43 @@
+<!doctype html>
+
+<html>
+
+<head>
+    <title>Device1 Environment Data</title>
+    <link href="https://mattduck.github.io/generic-css/css/generic-light.min.css" rel="stylesheet" type="text/css"/>
+</head>
+
+<body>
+    <h1>Device1 Environment Data Summary</h1>
+
+    <h2>Temperature</h2>
+    <p><strong>Celcius:</strong> {{ celcius }}</p>
+    <p><strong>Fahrenheit:</strong> {{ fahrenheit }}</p> 
+
+    <h2>API Description</h2>
+    <p>For use by developers...</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Resource/Path</th>
+                <th>GET</th>
+                <th>PUT</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>/api/environment</td>
+                <td>Current environment data</td>
+                <td>Not Used</td>
+            </tr>
+            <!-- <tr>
+                <td>/api/leds</td>
+                <td>Current light state(i.e. on/off)</td>
+                <td>Change light state<br>
+                    e.g. curl -X PUT http://hdiprpi:8000/api/leds -H "Content-Type: application/json" -d '{"state":"on"}'</td>
+            </tr> -->
+        </tbody>
+    </table>
+</body>
+
+</html>
