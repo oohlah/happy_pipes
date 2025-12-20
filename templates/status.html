@@ -11,25 +11,17 @@
     <h1>Device1 Environment Data Summary</h1>
 
     <h2>Temperature</h2>
+    <p>Most Recent Tempearture Reading:</p>
     <p><strong>Celcius:</strong> {{ celcius }}</p>
     <p><strong>Fahrenheit:</strong> {{ fahrenheit }}</p> 
 
-    <h2>API Description</h2>
-    <p>For use by developers...</p>
-    <table>
-        <thead>
-            <tr>
-                <th>Resource/Path</th>
-                <th>GET</th>
-                <th>PUT</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>/api/environment</td>
-                <td>Current environment data</td>
-                <td>Not Used</td>
-            </tr>
+    <h2>Temperature History</h2>
+
+<img
+    src="{{ url_for('static', filename='temperature.png') }}"
+    alt="Temperature over time"
+    style="max-width: 100%; height: auto;"
+>
             <!-- <tr>
                 <td>/api/leds</td>
                 <td>Current light state(i.e. on/off)</td>
