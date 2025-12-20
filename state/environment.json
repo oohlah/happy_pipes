@@ -1,9 +1,9 @@
 {
-  "temperature_c": -1.13,
-  "humidity_%": 81.76,
-  "dew_point_c": -3.84,
-  "last_update": 1766133915,
-  "ts": 1766165760,
-  "iso": "2025-12-19T17:36:00",
-  "image": "https://res.cloudinary.com/dzibswxj0/image/upload/v1766165759/environment_camera/last_env_image.jpg"
+  "temperature_c": 13.53,
+  "humidity_%": 72.0,
+  "dew_point_c": 8.58,
+  "last_update": 1766222895,
+  "ts": 1766222895,
+  "iso": "2025-12-20T09:28:15",
+  "image": null
 }

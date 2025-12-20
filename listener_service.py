@@ -1,10 +1,14 @@
 from sensor_listener import SensorListener
 import json, math, os, time
+from json_to_csv import save_csv, load_state
 
 #path to json file
 STATE_PATH = "state/environment.json"
 os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 
+#path to csv file
+CSV_PATH = "processing_data/env_data.csv"
+os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
 
 env_state = {
     "temperature_c": None,
@@ -40,7 +44,7 @@ def handle_data(data):
     except json.JSONDecodeError:
         return
     device = payload.get("device_id") 
-    updated = False
+    updated = False #track updated value
     if device == "temp_sense_01":
         env_state["temperature_c"] = round(payload.get("temperature"), 2)
         updated = True
@@ -51,9 +55,15 @@ def handle_data(data):
         env_state["dew_point_c"] = round(get_dew_point(env_state["temperature_c"], env_state["humidity_%"]), 2)
         env_state["last_update"] = int(time.time())
     if updated:
+        #save to json
         save_state()
+        #
+        env_data = load_state()
+        save_csv(env_data)
 
 if __name__ == "__main__":
+    # start_logging()
+
     listener = SensorListener(port=5000)
     listener.callback = handle_data
     listener.start()
