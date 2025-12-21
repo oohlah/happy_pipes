@@ -50,11 +50,12 @@ def save_state(image_url=None):
    env = read_env_state() or {}
    payload = env.copy()
 
-
-   # Add/Update image info and timestamps
-   payload["image"] = image_url
-   payload["ts"] = int(datetime.now().timestamp())
-   payload["iso"] = datetime.now().isoformat(timespec="seconds")
+   #update image if it is not empty
+   if image_url is not None:
+        payload["image"] = image_url #not saved
+        # Add/Update image info and timestamps
+        payload["ts"] = int(datetime.now().timestamp())
+        payload["iso"] = datetime.now().isoformat(timespec="seconds")
 
 
    try:
@@ -78,13 +79,12 @@ try:
             print("Temperature:", temp)
 
 
-            save_state()  # Save latest environment stats without image change
 
             #if temp less than hardcoded for now
             if temp <= 0:
                 capture_photo()
-                url = upload_image(IMAGE_PATH)
-                save_state(url)  # Save env stats + image URL
+                image_url = upload_image(IMAGE_PATH)
+                save_state(image_url)  # Save env stats + image URL
                 time.sleep(10)  # Wait short time to test camera
 
 
