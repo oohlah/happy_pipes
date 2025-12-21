@@ -1,11 +1,16 @@
 import BlynkLib, os
 from time import time, sleep
 
-from upload_cloudinary import image_url
+from datetime import datetime
+# from upload_cloudinary import image_url
 
 import json
 
 from environment_sensors import led_green, led_red
+
+from upload_cloudinary import upload_image
+
+from environment_camera import capture_photo
 
 #import requests library for url encoding
 import requests
@@ -42,6 +47,27 @@ def read_state():
             with open(STATE_PATH, "r") as f:
                 return json.load(f)
 
+#save new env_state with url of image once taken
+def save_state(image_url=None):
+   env = read_state() or {}
+   payload = env.copy()
+
+   #update image if it is not empty
+   if image_url is not None:
+        payload["image"] = image_url #not saved
+        # Add/Update image info and timestamps
+        payload["ts"] = int(datetime.now().timestamp())
+        payload["iso"] = datetime.now().isoformat(timespec="seconds")
+
+
+   try:
+       with open(STATE_PATH, "w") as f:
+           json.dump(payload, f, indent=2)
+       print("State saved:", payload)
+   except Exception as e:
+       print("Error saving state:", e)
+    
+
 #WANT TO ADD INTERVAL TIMING TO IMAGE BEING SENT - EVERY 30 MINS
 
 def send_image():
@@ -53,14 +79,17 @@ def send_image():
 
     try:
 
-        image = image_url()
+        
+        image_url = capture_photo()
+        image_url_cloud = upload_image(image_url) #upload to cloudinary
+        save_state(image_url_cloud)  # Save env stats + image URL to json
         
         response = requests.get(
             "https://blynk.cloud/external/api/update/property",
             params={
                 "token": BLYNK_AUTH,
                 "pin": "V2",
-                "urls": image
+                "urls": image_url_cloud
             }
         )
 
@@ -122,6 +151,8 @@ if __name__ == "__main__":
             sleep(2)
     except KeyboardInterrupt:
         print("Blynk application stopped.")
+        
+        
         
         
  
