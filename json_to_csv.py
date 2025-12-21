@@ -17,7 +17,7 @@ os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 CSV_PATH = os.path.join(PROCESSING_DATA_DIR, "env_data.csv")
 
 #read values stored in json
-def load_state():
+def load_csv():
         with open(STATE_PATH, "r") as f:
             env_data = json.load(f)
         return env_data
