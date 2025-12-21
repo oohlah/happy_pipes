@@ -81,36 +81,45 @@ def send_image():
 
 if __name__ == "__main__":
     print("Blynk application started. Listening for events...")
+
+    last_ts = 0 #track last json timestamp
+
     try:
         while True:
             env = read_state() 
-            print(f"{env}")
-            led_green()
-            blynk.run() #run Blynk
-            temp = env["temperature_c"]  #get temperature from state
+            current_ts= env.get("ts",0) #get current timestamp from index 0
 
-            #read dew_point from json
-            dew_point = env["dew_point_c"]  #store env.dew_point_c in dew_point
-            blynk.virtual_write(3, dew_point) #write dew_point to Blynk
+            if current_ts != last_ts:
+                
+                last_ts = current_ts #update last_ts to current_ts
+                print(f"{env}")
+                led_green()
+                blynk.run() #run Blynk
+                temp = env["temperature_c"]  #get temperature from state
 
-            #test to see when dew_point below 13 - HARDCODED FOR NOW
-            if dew_point < 13:
-                blynk.log_event("warning_dew_point_event")
+                #read dew_point from json
+                dew_point = env["dew_point_c"]  #store env.dew_point_c in dew_point
+                blynk.virtual_write(3, dew_point) #write dew_point to Blynk
+
+                #test to see when dew_point below 13 - HARDCODED FOR NOW
+                if dew_point < 13:
+                    blynk.log_event("warning_dew_point_event")
                 print(f"Dew Point: {dew_point}")
 
-            blynk.virtual_write(0, temp) #write temperature
-            print(f"Temperature: {temp}°C")
-            if temp <= 0:
-                led_red()
-                blynk.log_event("warning_temp_event")
-                send_image()
+                blynk.virtual_write(0, temp) #write temperature
+                
+                print(f"Temperature: {temp}°C")
+                if temp <= 0:
+                    led_red()
+                    blynk.log_event("warning_temp_event")
+                    send_image()
             
 
             now = time()
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
                 print(f"No activity for {INACTIVITY_TIMEOUT} seconds. Exiting.")
                 break
-            sleep(10)
+            sleep(2)
     except KeyboardInterrupt:
         print("Blynk application stopped.")
         
