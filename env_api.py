@@ -1,8 +1,8 @@
 from flask import Flask, request, render_template
 from flask_cors import CORS
 import os, json, datetime, time
-import pandas as pd
 import json
+
 
 #path to json file
 STATE_PATH = "state/environment.json"
