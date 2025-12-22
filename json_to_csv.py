@@ -2,6 +2,7 @@ import json
 import os
 import pandas as pd
 import time
+from datetime import datetime
 
 #determine base folder where script is running - the absolute path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 

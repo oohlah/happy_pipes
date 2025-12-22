@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from datetime import datetime
 import csv
 import os
 
@@ -13,32 +14,42 @@ STATIC_PATH = os.path.join(BASE_DIR, "static")
 os.makedirs(STATIC_PATH, exist_ok=True)
 
 # path to chart image
-CHART_PATH = os.path.join(STATIC_PATH, "temperature.png")
+CHART_PATH = os.path.join(STATIC_PATH, "temp_and_dew_point.png")
 
 # lists to store x (timestamps) and y (temperature) values
+
+fraction = 0.50
 x = []
-y = []
+y_temperature = []
+
+y_dew_point = []
 
 # open CSV and read data
 with open(CSV_PATH, 'r') as csvfile:
     lines = csv.reader(csvfile, delimiter=',')
-    next(lines)  # skip header
+    next(lines) #skip header
     for row in lines:
-        if row[0]:  # skip rows where temperature is missing
-            y.append(float(row[0]))  # temperature column
-            x.append(row[5])        # ISO timestamp column
+            if row[0] and row[2] and row[5] :
+                x.append(datetime.fromisoformat(row[5]))        # ISO timestamp column on x-axis, 5 index
+                y_temperature.append(float(row[0]))  # temperature on y-aaxis, 0 index in csv
+                y_dew_point.append(float(row[2]))  # dew_point - y, 2nd index in csv
+            
 
 # create the figure
 plt.figure(figsize=(10,5))
 
 # plot the temperature data
-plt.plot(x, y, color='g', linestyle='dashed', marker='o', label="Temperature")
+
+plt.plot(x, y_temperature, color='r', linestyle='-', marker=None, label="Temperature °C", linewidth=1)
+plt.plot(x, y_dew_point, color='b', linestyle='-', marker=None, label="Dew Point °C", linewidth = 1)
+
+
 
 # format x-axis labels
 plt.xticks(rotation=25)
 plt.xlabel('Time')
-plt.ylabel('Temperature (°C)')
-plt.title('Temperature Over Time', fontsize=16)
+plt.ylabel('Value')
+plt.title('Temperature & Dew Point Over Time', fontsize=16)
 plt.grid(True)
 plt.legend()
 plt.tight_layout()

@@ -1,8 +1,8 @@
 from flask import Flask, request, render_template
 from flask_cors import CORS
-import os
+import os, json, datetime, time
 import pandas as pd
-from json_to_csv import load_state
+import json
 
 #path to json file
 STATE_PATH = "state/environment.json"
@@ -16,22 +16,41 @@ os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
 app = Flask(__name__)
 CORS(app)
 
-
+def load_state():
+    try:
+        with open(STATE_PATH) as f:
+            data = json.load(f)
+        ts = data.get("ts")
+        if not ts:
+            return None
+        age = int(time.time()) - ts
+        time_str = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
+        data["age"] = age
+        data["time_str"] = time_str
+        return data
+    except FileNotFoundError:
+        return None
+    except Exception as e:
+        print("Error loading state:", e)
+        return None
+    
 @app.route('/api/environment',methods=['GET'])
 def current_environment():
     env = load_state()
-    temperature=round(env['temperature_c'], 2)
-    # humidity=round(env.humidity_%,2) - issue with %?
-    dew_point = round(env['dew_point_c'])
-    msg = {"temp":temperature, "dew_point": dew_point}
-    return str(msg)+"\n"
+    
+    return {
+        "temperature_c": env["temperature_c"],
+        "humidity_percent": env["humidity_%"],
+        "dew_point_c": env["dew_point_c"],
+        "timestamp": env["iso"],
+        "image": env.get("image"),
+    }
 
 @app.route('/') 
 def index():
-    env = load_state()
-    celcius = round(env['temperature_c'], 2)
-    fahrenheit = round(1.8 * celcius + 32, 2)
-    return render_template('status.html', celcius=celcius, fahrenheit=fahrenheit)
+   env = load_state()
+
+   return render_template("status.html", env=env)
 
 #Run API on port 8000, set debug to True
 app.run(host='0.0.0.0', port=8000, debug=True)
