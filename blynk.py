@@ -19,7 +19,7 @@ import paho.mqtt.client as mqtt
 
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
-MQTT_TOPIC = "/orla/env/image"  
+MQTT_TOPIC_BLYNK = "/orla/env/now"  
 
 client = mqtt.Client()
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
