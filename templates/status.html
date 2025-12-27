@@ -3,33 +3,39 @@
 <html>
 
 <head>
-    <title>Device1 Environment Data</title>
+    <title>Environment Data</title>
     <link href="https://mattduck.github.io/generic-css/css/generic-light.min.css" rel="stylesheet" type="text/css"/>
 </head>
 
 <body>
-    <h1>Device1 Environment Data Summary</h1>
+    <h1>Environment Data Summary</h1>
 
-    <h2>Temperature</h2>
+    <h2>Most Recent Environment Data</h2>
     <p>Most Recent Tempearture Reading:</p>
-    <p><strong>Celcius:</strong> {{ celcius }}</p>
-    <p><strong>Fahrenheit:</strong> {{ fahrenheit }}</p> 
+    <p><strong>Temperature:</strong> {{ env['temperature_c'] }} ° C</p>
+    <p><strong>Humidity:</strong> {{ env['humidity_%'] }} %</p>
+    <p><strong>Dew Point:</strong> {{ env['dew_point_c'] }} ° C</p>
+
 
     <h2>Temperature History</h2>
 
 <img
-    src="{{ url_for('static', filename='temperature.png') }}"
-    alt="Temperature over time"
+    src="{{ url_for('static', filename='temp_and_dew_point.png') }}"
     style="max-width: 100%; height: auto;"
 >
-            <!-- <tr>
-                <td>/api/leds</td>
-                <td>Current light state(i.e. on/off)</td>
-                <td>Change light state<br>
-                    e.g. curl -X PUT http://hdiprpi:8000/api/leds -H "Content-Type: application/json" -d '{"state":"on"}'</td>
-            </tr> -->
-        </tbody>
-    </table>
-</body>
+
+    <h2>Environment Image</h2>
+        {% if env and env.image %}
+        <p> Last Urgent Image Update: <strong>{{ env.time_str }}</strong><br>({{ env.age }} seconds ago)</p>
+
+        <img src="{{ env.image }}"
+            style="max-width: 100%; height: auto;">
+
+        {% else %}
+        <p>No Urgent Images Recorded Yet.</p>
+        {% endif %}
+        
+   
+    </body>
 
 </html>
