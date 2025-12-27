@@ -56,6 +56,7 @@ def current_environment():
 @app.route('/') 
 def index():
    env = load_state()
+   generate_chart()
 
    return render_template("status.html", env=env)
 
@@ -75,8 +76,6 @@ def on_message(client, userdata, msg):
     with open(STATE_PATH, "w") as f:
         json.dump(data, f)
     print("State updated:", data)
-
-    generate_chart()
    
        
 # Set up MQTT client
