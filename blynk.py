@@ -3,18 +3,27 @@ from time import time, sleep
 
 from datetime import datetime
 # from upload_cloudinary import image_url
+from upload_cloudinary import upload_image
 
 import json
 
 from environment_sensors import led_green, led_red
 
-from upload_cloudinary import upload_image
 
 from environment_camera import capture_photo
 
 #import requests library for url encoding
 import requests
 
+import paho.mqtt.client as mqtt
+
+MQTT_BROKER = "broker.hivemq.com"
+MQTT_PORT = 1883
+MQTT_TOPIC = "/orla/env/image"  
+
+client = mqtt.Client()
+client.connect(MQTT_BROKER, MQTT_PORT, 60)
+client.loop_start()
 
 BLYNK_AUTH= os.getenv("BLYNK_AUTH")
 
@@ -83,6 +92,12 @@ def send_image():
         image_url = capture_photo()
         image_url_cloud = upload_image(image_url) #upload to cloudinary
         save_state(image_url_cloud)  # Save env stats + image URL to json
+
+        #Publish to MQTT 
+        with open(STATE_PATH, 'r') as f:
+            payload = json.load(f)
+        client.publish(MQTT_TOPIC, json.dumps(payload))
+        print("MQTT event published:", payload)
         
         response = requests.get(
             "https://blynk.cloud/external/api/update/property",
@@ -152,7 +167,11 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Blynk application stopped.")
         
-        
+    finally:
+        # Stop MQTT loop 
+        client.loop_stop()
+        client.disconnect()
+        print("MQTT client disconnected.") 
         
         
  
