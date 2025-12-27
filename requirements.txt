@@ -6,3 +6,4 @@ Blynklib
 requests 
 cloudinary
 pandas
+paho-mqtt
