@@ -1,6 +1,6 @@
 from sensor_listener import SensorListener
 import json, math, os, time
-from json_to_csv import save_csv, load_state
+from json_to_csv import save_csv
 
 #path to json file
 STATE_PATH = "state/environment.json"
@@ -58,8 +58,7 @@ def handle_data(data):
         #save to json
         save_state()
         #
-        env_data = load_state()
-        save_csv(env_data)
+        save_csv(env_state)
 
 if __name__ == "__main__":
     listener = SensorListener(port=5000)
