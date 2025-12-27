@@ -1,1 +1,10 @@
-paho-mqtt
+Flask
+gunicorn 
+flask-cors
+matplotlib
+Blynklib
+requests 
+cloudinary
+picamera2
+sense_hat
+pandas
