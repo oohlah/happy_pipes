@@ -87,7 +87,6 @@ def send_image():
         return
 
     try:
-
         
         image_url = capture_photo()
         image_url_cloud = upload_image(image_url) #upload to cloudinary
