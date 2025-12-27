@@ -2,7 +2,7 @@ from flask import Flask, request, render_template
 from flask_cors import CORS
 import os, json, datetime, time
 import json
-
+import paho.mqtt.client as mqtt
 
 #path to json file
 STATE_PATH = "state/environment.json"
@@ -15,6 +15,10 @@ os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
 #create Flask app instance and apply CORS
 app = Flask(__name__)
 CORS(app)
+
+MQTT_BROKER = "broker.hivemq.com"
+MQTT_PORT = 1883
+MQTT_TOPIC_BLYNK = "/orla/env/now" 
 
 def load_state():
     try:
@@ -51,6 +55,33 @@ def index():
    env = load_state()
 
    return render_template("status.html", env=env)
+
+# --- MQTT CALLBACKS ---
+
+def on_connect(client, userdata, flags, rc):
+    print("MQTT connected with result code", rc)
+    client.subscribe(MQTT_TOPIC_BLYNK)
+    print("Subscribed to:", MQTT_TOPIC_BLYNK)
+
+
+def on_message(client, userdata, msg):
+    print("MQTT message on", msg.topic)
+    payload_str = msg.payload.decode("utf-8")
+    data = json.loads(payload_str)  
+    data["ts"] = int(time.time())
+    with open(STATE_PATH, "w") as f:
+        json.dump(data, f)
+    print("State updated:", data)
+   
+       
+# Set up MQTT client
+mqtt_client = mqtt.Client()
+mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message
+
+mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+mqtt_client.loop_start()  # run MQTT network loop in background thread
+
 
 #Run API on port 8000, set debug to True
 app.run(host='0.0.0.0', port=8000, debug=True)
