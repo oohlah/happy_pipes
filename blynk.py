@@ -96,7 +96,7 @@ def send_image():
         #Publish to MQTT 
         with open(STATE_PATH, 'r') as f:
             payload = json.load(f)
-        client.publish(MQTT_TOPIC, json.dumps(payload))
+        client.publish(MQTT_TOPIC_BLYNK, json.dumps(payload))
         print("MQTT event published:", payload)
         
         response = requests.get(
