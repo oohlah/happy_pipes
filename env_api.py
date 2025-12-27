@@ -3,11 +3,14 @@ from flask_cors import CORS
 import os, json, datetime, time
 import json
 import paho.mqtt.client as mqtt
+from chart import generate_chart
 
+
+#determine base folder where script is running - the absolute path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
 #path to json file
 STATE_PATH = "state/environment.json"
 os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
-
 #path to csv file
 CSV_PATH = "processing_data/env_data.csv"
 os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
@@ -56,7 +59,7 @@ def index():
 
    return render_template("status.html", env=env)
 
-# --- MQTT CALLBACKS ---
+#MQTT CALLBACKS
 
 def on_connect(client, userdata, flags, rc):
     print("MQTT connected with result code", rc)
@@ -72,6 +75,8 @@ def on_message(client, userdata, msg):
     with open(STATE_PATH, "w") as f:
         json.dump(data, f)
     print("State updated:", data)
+
+    generate_chart()
    
        
 # Set up MQTT client
