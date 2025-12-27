@@ -61,6 +61,6 @@ def generate_chart():
 
 if __name__ == "__main__":
         generate_chart()
-        time.sleep(30)
+       
 
    
