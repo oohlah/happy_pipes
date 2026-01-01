@@ -15,6 +15,13 @@ os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 CSV_PATH = "processing_data/env_data.csv"
 os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
 
+# static directory with jpg/png
+STATIC_PATH = os.path.join(BASE_DIR, "static")
+os.makedirs(STATIC_PATH, exist_ok=True)
+
+# path to chart image
+CHART_PATH = os.path.join(STATIC_PATH, "temp_and_dew_point.png")
+
 #create Flask app instance and apply CORS
 app = Flask(__name__)
 CORS(app)
@@ -57,7 +64,7 @@ def current_environment():
 def index():
    env = load_state()
    generate_chart()
-   fig = CSV_PATH
+   fig = os.path.basename(CHART_PATH)
 
    return render_template("status.html", env=env, plot_data=fig)
 
