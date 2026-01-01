@@ -57,8 +57,10 @@ def current_environment():
 def index():
    env = load_state()
    generate_chart()
+   fig = CSV_PATH
 
-   return render_template("status.html", env=env)
+   return render_template("status.html", env=env, plot_data=fig)
+
 
 #MQTT CALLBACKS
 
