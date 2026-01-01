@@ -76,6 +76,20 @@ def save_state(image_url=None):
    except Exception as e:
        print("Error saving state:", e)
     
+#update state regularly to json and publish via MQTT to flask app
+def update_state(sensor_data=None):
+    env = read_state()
+    env["ts"] = int(datetime.now().timestamp())
+    env["iso"] = datetime.now().isoformat(timespec="seconds")
+
+    if sensor_data: 
+        env.update(sensor_data)
+
+        save_state(env)
+
+        # Publish to MQTT so Flask can subscribe
+        client(MQTT_TOPIC_BLYNK, json.dumps(env))
+        print("MQTT published:", env)
 
 #WANT TO ADD INTERVAL TIMING TO IMAGE BEING SENT - EVERY 30 MINS
 
@@ -131,6 +145,9 @@ if __name__ == "__main__":
         while True:
             env = read_state() 
             current_ts= env.get("ts",0) #get current timestamp from index 0
+
+            # Update the state JSON and publish via MQTT
+            update_state(sensor_data={"temperature_c": temp, "dew_point_c": dew_point})
 
             if current_ts != last_ts:
                 
