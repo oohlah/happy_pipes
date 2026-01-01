@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 from datetime import datetime
+import pandas as pd
 import csv
 import os
 import time
@@ -36,6 +37,8 @@ def generate_chart():
                 y_temperature.append(float(row[0]))            # temperature on y-aaxis, 0 index in csv
                 y_dew_point.append(float(row[2]))               # dew_point - y, 2nd index in csv
 
+        # non-GUI backend so Matplotlib can be used in flask
+        plt.switch_backend('Agg')
         # create the figure
         plt.figure(figsize=(10,5))
 
@@ -59,8 +62,7 @@ def generate_chart():
         plt.close()
         print(f"Chart saved to {CHART_PATH}")
 
-if __name__ == "__main__":
-        generate_chart()
+
        
 
    
