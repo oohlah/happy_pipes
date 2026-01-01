@@ -5,9 +5,13 @@ import json
 import paho.mqtt.client as mqtt
 from chart import generate_chart
 
+#importt thread for chart process
+from threading import Thread
+import time
 
 #determine base folder where script is running - the absolute path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
+os.chdir(BASE_DIR) #
 #path to json file
 STATE_PATH = "state/environment.json"
 os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
@@ -63,7 +67,6 @@ def current_environment():
 @app.route('/') 
 def index():
    env = load_state()
-   generate_chart()
    fig = os.path.basename(CHART_PATH)
 
    return render_template("status.html", env=env, plot_data=fig)
@@ -95,6 +98,20 @@ mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()  # run MQTT network loop in background thread
 
+#generate chart every 30 seconds without blocking flask
+#chart responds to csv updates
+def chart_loop():
+    while True:
+        try:
+            generate_chart()
+        except Exception as e:
+            print("Chart generation error:", e)
+
+        time.sleep(30)  
+    
+t = Thread(target=chart_loop, daemon=True)
+t.start() 
 
 #Run API on port 8000
 app.run(host='0.0.0.0', port=8000) 
+
