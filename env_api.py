@@ -89,5 +89,5 @@ mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()  # run MQTT network loop in background thread
 
 
-#Run API on port 8000, set debug to True
-app.run(host='0.0.0.0', port=8000, debug=True)
+#Run API on port 8000
+app.run(host='0.0.0.0', port=8000) 
