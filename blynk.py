@@ -53,8 +53,16 @@ image_sent = False
 
 #read environment stats from json file
 def read_state():
-            with open(STATE_PATH, "r") as f:
-                return json.load(f)
+    try:
+        with open(STATE_PATH, "r") as f:
+            return json.load(f)
+    except json.decoder.JSONDecodeError:
+        print("There was a problem accessing json data.")
+        # Reset json to write
+        with open(STATE_PATH, "w") as f:
+            json.dump({}, f)
+        return {}  # Return empty dict so code doesn't crash
+        
 
 #save new env_state with url of image once taken
 def save_state(image_url=None):
@@ -88,7 +96,7 @@ def update_state(sensor_data=None):
         save_state(env)
 
         # Publish to MQTT so Flask can subscribe
-        client(MQTT_TOPIC_BLYNK, json.dumps(env))
+        client.publish(MQTT_TOPIC_BLYNK, json.dumps(env))
         print("MQTT published:", env)
 
 #WANT TO ADD INTERVAL TIMING TO IMAGE BEING SENT - EVERY 30 MINS
@@ -145,6 +153,8 @@ if __name__ == "__main__":
         while True:
             env = read_state() 
             current_ts= env.get("ts",0) #get current timestamp from index 0
+            temp = env.get("temperature_c", 0.0)
+            dew_point = env.get("dew_point_c", 0.0)
 
             # Update the state JSON and publish via MQTT
             update_state(sensor_data={"temperature_c": temp, "dew_point_c": dew_point})
