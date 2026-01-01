@@ -19,11 +19,11 @@
     <p><strong>Dew Point:</strong> {{ env['dew_point_c'] }} ° C</p>
 
 
-    <h2>Temperature History</h2>
+    <h2>Temperature History</h2> 
 
 <img
-    src="{{ url_for('static', filename='temp_and_dew_point.png') }}"
-    style="max-width: 100%; height: auto;"
+    src="{{ url_for('static', filename=plot_data) }}" style="max-width: 100%; height: auto;">
+
 >
 
     <h2>Environment Image</h2>
