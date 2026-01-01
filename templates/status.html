@@ -5,6 +5,8 @@
 <head>
     <title>Environment Data</title>
     <link href="https://mattduck.github.io/generic-css/css/generic-light.min.css" rel="stylesheet" type="text/css"/>
+    <!-- refresh every 5 sec -->
+    <meta http-equiv="refresh" content="5"> 
 </head>
 
 <body>
@@ -28,6 +30,7 @@
         {% if env and env.image %}
         <p> Last Urgent Image Update: <strong>{{ env.time_str }}</strong><br>({{ env.age }} seconds ago)</p>
 
+        <!-- //latest image from cloudinary -->
         <img src="{{ env.image }}"
             style="max-width: 100%; height: auto;">
 
