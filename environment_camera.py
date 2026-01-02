@@ -20,9 +20,6 @@ IMAGE_PATH = os.path.join(STATIC_DIR, "last_env_image.jpg")
 
 picam2=None #camera doesn't start on boot
 
-STATE_DIR = os.path.join(BASE_DIR, "state")
-os.makedirs(STATE_DIR, exist_ok=True)
-STATE_PATH = os.path.join(STATE_DIR, "environment.json")
 
 # initialise camera, capture photo and save to image_path when called
 def capture_photo():
