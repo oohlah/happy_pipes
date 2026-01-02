@@ -28,7 +28,8 @@ STATE_PATH = os.path.join(STATE_DIR, "environment.json")
 def capture_photo():
         try:
             picam2 = Picamera2()
-            picam2.configure(picam2.create_still_configuration(main={"size": (3280,2464)}))
+            #size: HD camera resolution
+            picam2.configure(picam2.create_still_configuration(main={"size": (1280,720)}))
             picam2.start()
             print("Camera started. Image will be taken once temperature drops")
             print("Capturing Environment Image")
