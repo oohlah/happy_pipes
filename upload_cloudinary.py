@@ -2,6 +2,7 @@ import cloudinary
 import cloudinary.uploader
 import os
 
+
 cloudinary.config(
     cloud_name="dzibswxj0",
     api_key="193738126849429",
@@ -25,18 +26,40 @@ def upload_image(image_path = IMAGE_PATH, #explicitly setting image_path to IMAG
         overwrite = True,
         invalidate = True,
     )
-    url = result["secure_url"]
-    return url
+    url_pic = result["secure_url"]
+    return url_pic
 
 
 def image_url():
     return upload_image(IMAGE_PATH)
 
+CHART_PATH = os.path.join(STATIC_DIR, "temp_and_dew_point.png")
+
+#upload image and return public url - allow overwrite
+def upload_chart(image_path=CHART_PATH,
+                 folder="environment_chart",
+                 public_id="temp_and_dew_point"):
+   
+    result = cloudinary.uploader.upload(
+        image_path,
+        folder=folder,
+        public_id=public_id,
+        overwrite=True,
+        invalidate=True
+    )
+    url_chart = result["secure_url"]
+    return url_chart
+
+def chart_url():
+    return upload_chart()
+
 def main():
-    url = upload_image(IMAGE_PATH)
-    print("Upload Complete")
-    print(f"Public URL: {url}")
-    print (image_url())
+    url_pic = upload_image(IMAGE_PATH)
+    print("Upload Picture Complete")
+    url_chart = upload_chart(CHART_PATH)
+    print(f"Public Pic URL: {url_pic}")
+    print(f"Public Chart URL: {url_chart}")
+    # print (image_url())
 
 
 
