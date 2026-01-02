@@ -1,11 +1,17 @@
+import matplotlib
+matplotlib.use("Agg")
 from matplotlib import pyplot as plt
+
+
 from datetime import datetime
 import pandas as pd
 import csv
 import os
+
+#to save chart to json
+from upload_cloudinary import upload_chart
+import json 
 import time
-
-
 
 # determine base folder where script is running - the absolute path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
@@ -19,6 +25,10 @@ os.makedirs(STATIC_PATH, exist_ok=True)
 
 # path to chart image
 CHART_PATH = os.path.join(STATIC_PATH, "temp_and_dew_point.png")
+
+#path to json file
+STATE_PATH = "state/environment.json"
+os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 
 def generate_chart():
     # lists to store x (timestamps) and y (temperature) values
@@ -34,6 +44,7 @@ def generate_chart():
         for row in lines:
             print(f"reading row?: {row}")
 
+            
             if row[0] and row[2] and row[5]:
                 try:
                     x.append(datetime.fromisoformat(row[5]))        # ISO timestamp column on x-axis, 5 index
@@ -42,12 +53,9 @@ def generate_chart():
                 except Exception as e:
                     print(f"error {e} has occured. skip row")
 
-    if not x:
-            print("no valid data to plit")
-            return
-            
-        # non-GUI backend so Matplotlib can be used in flask
-    plt.switch_backend('Agg')
+   
+         
+
     # create the figure
     plt.figure(figsize=(10,5))
 
@@ -71,7 +79,29 @@ def generate_chart():
     plt.close()
     print(f"Chart saved to {CHART_PATH}")
 
+    # upload chart
+    chart_url = upload_chart(CHART_PATH)
+    print(f"Chart uploaded: {chart_url}")
 
+    # update JSON
+    try:
+        with open(STATE_PATH) as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        data = {}
+        print("")
+        print(f"data")
+        print("")
+
+    data["chart"] = chart_url
+   
+
+    with open(STATE_PATH, "w") as f:
+         json.dump(data, f, indent=2)
+
+
+    print("JSON updated with chart URL")
+   
  #test      
 # if __name__ == "__main__":
 #    print(f"Running chart.py")
