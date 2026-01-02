@@ -37,6 +37,6 @@ def save_csv(env_data):
             else: 
                 df.to_csv(CSV_PATH, mode = 'a', header = False, index = False) #append to csv - without headers
 
-            time.sleep(1)
+           
 
        
