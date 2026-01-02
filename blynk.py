@@ -1,106 +1,95 @@
 import BlynkLib, os
 from time import time, sleep
-
 from datetime import datetime
-# from upload_cloudinary import image_url
+
 from upload_cloudinary import upload_image
-
 import json
-
 from environment_sensors import led_green, led_red
-
-
 from environment_camera import capture_photo
-
 #import requests library for url encoding
 import requests
-
 import paho.mqtt.client as mqtt
 
+# MQTT configuration
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
 MQTT_TOPIC_BLYNK = "/orla/env/now"  
 
+# Connect MQTT client
 client = mqtt.Client()
 client.connect(MQTT_BROKER, MQTT_PORT, 60)
 client.loop_start()
 
+# Blynk authentication
 BLYNK_AUTH= os.getenv("BLYNK_AUTH")
-
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
-#determine base folder where script is running - the absolute path
+# Determine base folder where script is running - the absolute path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
-STATE_PATH = os.path.join(BASE_DIR, "state", "environment.json") #safely join base with json file
+STATE_PATH = os.path.join(BASE_DIR, "state", "environment.json") # safely join base with json file
 
-#reading every 30
+# Reading every 30 seconds
 INACTIVITY_TIMEOUT = 30
 blynk.last_activity = time()
 
-#v1 is switch to turn off after inactivity
+# v1 is switch to turn off after inactivity
 @blynk.on("V1")
 def handle_v1_write(value):
     button_value = value[0]
     blynk.last_activity = time()  
     print(f'Current button value: {button_value}')
     if button_value=="1":
-       print(f"fake placeholder for now") #sense.clear(255,255,255)
-    #else:
-        #sense.clear()
+       print(f"fake placeholder for now")  # placeholder for now, expand later
 
+image_sent = False  # track if image has been sent already
 
-image_sent = False
-
-#read environment stats from json file
+# Read environment stats from JSON file
 def read_state():
     try:
         with open(STATE_PATH, "r") as f:
             return json.load(f)
     except json.decoder.JSONDecodeError:
-        print("There was a problem accessing json data.")
+        print("There was a problem accessing json data.")  # debug info
         # Reset json to write
         with open(STATE_PATH, "w") as f:
             json.dump({}, f)
         return {}  # Return empty dict so code doesn't crash
-        
 
-#save new env_state with url of image once taken
+# Save new env_state with URL of image once taken
 def save_state(image_url=None):
    env = read_state() or {}
-   payload = env.copy()
 
-   #update image if it is not empty
+   # update image if it is not empty
    if image_url is not None:
-        payload["image"] = image_url #not saved
-        # Add/Update image info and timestamps
-        payload["ts"] = int(datetime.now().timestamp())
-        payload["iso"] = datetime.now().isoformat(timespec="seconds")
+       env["image"] = image_url  # store image URL as string
 
+   # Add/Update timestamps
+   env["image_ts"] = int(datetime.now().timestamp())
+   env["image_iso"] = datetime.now().isoformat(timespec="seconds")
 
    try:
        with open(STATE_PATH, "w") as f:
-           json.dump(payload, f, indent=2)
-       print("State saved:", payload)
+           json.dump(env, f, indent=2)
+       print("State saved:", env)
    except Exception as e:
        print("Error saving state:", e)
-    
-#update state regularly to json and publish via MQTT to flask app
+
+# Update state regularly to JSON and publish via MQTT to Flask app
 def update_state(sensor_data=None):
     env = read_state()
     env["ts"] = int(datetime.now().timestamp())
     env["iso"] = datetime.now().isoformat(timespec="seconds")
 
     if sensor_data: 
-        env.update(sensor_data)
+        env=read_state()  # update with latest sensor data
 
-        save_state(env)
+        save_state(env)  # persist JSON state
 
         # Publish to MQTT so Flask can subscribe
         client.publish(MQTT_TOPIC_BLYNK, json.dumps(env))
         print("MQTT published:", env)
 
-#WANT TO ADD INTERVAL TIMING TO IMAGE BEING SENT - EVERY 30 MINS
-
+# Function to send camera image via Blynk API
 def send_image():
     global image_sent
 
@@ -109,17 +98,20 @@ def send_image():
         return
 
     try:
-        
-        image_url = capture_photo()
-        image_url_cloud = upload_image(image_url) #upload to cloudinary
-        save_state(image_url_cloud)  # Save env stats + image URL to json
+        # Capture photo locally
+        image_path = capture_photo()
+        # Upload to Cloudinary and get URL
+        image_url_cloud = upload_image(image_path)
+        # Save image URL to state JSON
+        save_state(image_url_cloud)
 
-        #Publish to MQTT 
+        # Publish state via MQTT
         with open(STATE_PATH, 'r') as f:
             payload = json.load(f)
         client.publish(MQTT_TOPIC_BLYNK, json.dumps(payload))
         print("MQTT event published:", payload)
-        
+
+        # Send image URL to Blynk virtual pin V2
         response = requests.get(
             "https://blynk.cloud/external/api/update/property",
             params={
@@ -128,7 +120,6 @@ def send_image():
                 "urls": image_url_cloud
             }
         )
-
         print(f"Status: {response.status_code}, response: {response.text}")
 
         if response.status_code == 200:
@@ -142,48 +133,41 @@ def send_image():
         print(f"Exception sending image: {e}")
         image_sent = False
 
-
-
+# Main loop
 if __name__ == "__main__":
     print("Blynk application started. Listening for events...")
 
-    last_ts = 0 #track last json timestamp
+    last_ts = 0  # track last JSON timestamp
 
     try:
         while True:
             env = read_state() 
-            current_ts= env.get("ts",0) #get current timestamp from index 0
+            current_ts = env.get("ts",0)  # get current timestamp from JSON
             temp = env.get("temperature_c", 0.0)
             dew_point = env.get("dew_point_c", 0.0)
 
-            # Update the state JSON and publish via MQTT
+            # Update JSON with latest readings
             update_state(sensor_data={"temperature_c": temp, "dew_point_c": dew_point})
 
             if current_ts != last_ts:
-                
-                last_ts = current_ts #update last_ts to current_ts
+                last_ts = current_ts  # update last timestamp
                 print(f"{env}")
-                led_green()
-                blynk.run() #run Blynk
-                temp = env["temperature_c"]  #get temperature from state
+                led_green()  # indicate green LED
+                blynk.run()  # run Blynk process
+                blynk.virtual_write(0, temp)  # write temperature to Blynk
+                blynk.virtual_write(3, dew_point)  # write dew point to Blynk
 
-                #read dew_point from json
-                dew_point = env["dew_point_c"]  #store env.dew_point_c in dew_point
-                blynk.virtual_write(3, dew_point) #write dew_point to Blynk
-
-                #test to see when dew_point below 13 - HARDCODED FOR NOW
+                # Check for dew point warning
                 if dew_point < 13:
                     blynk.log_event("warning_dew_point_event")
                 print(f"Dew Point: {dew_point}")
 
-                blynk.virtual_write(0, temp) #write temperature
-                
+                # Temperature warning
                 print(f"Temperature: {temp}°C")
                 if temp <= 0:
                     led_red()
                     blynk.log_event("warning_temp_event")
-                    send_image()
-            
+                    send_image()  # send camera image
 
             now = time()
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
@@ -192,12 +176,8 @@ if __name__ == "__main__":
             sleep(2)
     except KeyboardInterrupt:
         print("Blynk application stopped.")
-        
     finally:
-        # Stop MQTT loop 
+        # Stop MQTT loop and disconnect
         client.loop_stop()
         client.disconnect()
-        print("MQTT client disconnected.") 
-        
-        
- 
+        print("MQTT client disconnected.")
