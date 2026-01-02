@@ -1,11 +1,12 @@
 from flask import Flask, request, render_template
 from flask_cors import CORS
-import os, json, datetime, time
+import os, json, time
+from datetime import datetime
 import json
 import paho.mqtt.client as mqtt
 from chart import generate_chart
 
-#importt thread for chart process
+#import thread for chart process
 from threading import Thread
 import time
 
@@ -19,7 +20,7 @@ os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 CSV_PATH = "processing_data/env_data.csv"
 os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
 
-# static directory with jpg/png
+# static directory with png
 STATIC_PATH = os.path.join(BASE_DIR, "static")
 os.makedirs(STATIC_PATH, exist_ok=True)
 
@@ -34,27 +35,42 @@ MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
 MQTT_TOPIC_BLYNK = "/orla/env/now" 
 
-def load_state():
+# Read environment stats from JSON file
+def read_state():
     try:
-        with open(STATE_PATH) as f:
-            data = json.load(f)
-        ts = data.get("ts")
-        if not ts:
-            return None
-        age = int(time.time()) - ts
-        time_str = datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
-        data["age"] = age
-        data["time_str"] = time_str
-        return data
-    except FileNotFoundError:
-        return None
-    except Exception as e:
-        print("Error loading state:", e)
-        return None
+        with open(STATE_PATH, "r") as f:
+            return json.load(f)
+    except json.decoder.JSONDecodeError:
+        print("There was a problem accessing json data.")  # debug info
+        # Reset json to write
+        with open(STATE_PATH, "w") as f:
+            json.dump({}, f)
+        return {}  # Return empty dict so code doesn't crash
+
+# Save new env_state with URL of image once taken
+def save_state(chart_url=None):
+   env = read_state() or {}
+
+   # always update chart
+   if chart_url:
+       env["chart"] = chart_url  # store image URL as string
+
+   # Add/Update timestamps
+   env["chart_ts"] = int(datetime.now().timestamp())
+   env["chart_iso"] = datetime.now().isoformat(timespec="seconds")
+
+   try:
+       with open(STATE_PATH, "w") as f:
+           json.dump(env, f, indent=2)
+       print("State saved:", env)
+   except Exception as e:
+       print("Error saving state:", e)
+
+       save_state(env)  # persist JSON state
     
 @app.route('/api/environment',methods=['GET'])
 def current_environment():
-    env = load_state()
+    env = read_state()
     
     return {
         "temperature_c": env["temperature_c"],
@@ -62,14 +78,17 @@ def current_environment():
         "dew_point_c": env["dew_point_c"],
         "timestamp": env["iso"],
         "image": env.get("image"),
+        "image_iso": env.get("image_iso"),
+        "image_ts": env.get("image_ts"),
+        "chart": env.get("chart")
     }
 
 @app.route('/') 
 def index():
-   env = load_state()
-   fig = os.path.basename(CHART_PATH)
+   env = read_state()
 
-   return render_template("status.html", env=env, plot_data=fig)
+
+   return render_template("status.html", env=env) 
 
 
 #MQTT CALLBACKS
@@ -85,6 +104,7 @@ def on_message(client, userdata, msg):
     payload_str = msg.payload.decode("utf-8")
     data = json.loads(payload_str)  
     data["ts"] = int(time.time())
+
     with open(STATE_PATH, "w") as f:
         json.dump(data, f)
     print("State updated:", data)
@@ -98,12 +118,15 @@ mqtt_client.on_message = on_message
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
 mqtt_client.loop_start()  # run MQTT network loop in background thread
 
-#generate chart every 30 seconds without blocking flask
+#generate chart every 30 seconds without blocking flask with threading
 #chart responds to csv updates
 def chart_loop():
     while True:
+        print(f"starting chart loop...")
         try:
-            generate_chart()
+            chart_url = generate_chart()
+            print(f"chart generated")
+            save_state(chart_url)
         except Exception as e:
             print("Chart generation error:", e)
 
