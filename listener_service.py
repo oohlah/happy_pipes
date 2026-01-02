@@ -17,8 +17,9 @@ env_state = {
     "last_update": None,
     "ts": None,
     "iso": None,
-    "image": None  # empty image on initialisation
-}
+    "image": None,  # empty image on initialisation
+    "chart": None
+}   
 
 #calculate dew point from temp & humidity
 def get_dew_point(temp, humi):
@@ -32,6 +33,7 @@ def save_state():
         with open(STATE_PATH, "r") as f:
             old = json.load(f)
         env_state["image"] = old.get("image")  # keep current image for now
+        env_state["chart"] = old.get("chart") # keep current chart
     env_state["ts"] = int(time.time())
     env_state["iso"] = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
     with open(STATE_PATH, "w") as f:
