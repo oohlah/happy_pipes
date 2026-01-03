@@ -7,17 +7,12 @@ from environment_sensors import led_green, led_red
 from environment_camera import capture_photo
 #import requests library for url encoding
 import requests
-import paho.mqtt.client as mqtt
+import paho.mqtt.client as mqtt  
 
-# MQTT configuration
+#MQTT configuration - subscriber
 MQTT_BROKER = "broker.hivemq.com"
 MQTT_PORT = 1883
-MQTT_TOPIC_BLYNK = "/orla/env/now"  
-
-# Connect MQTT client
-client = mqtt.Client()
-client.connect(MQTT_BROKER, MQTT_PORT, 60)
-client.loop_start()
+MQTT_TOPIC_UDP = "/orla/env/udp"
 
 # Blynk authentication
 BLYNK_AUTH= os.getenv("BLYNK_AUTH")
@@ -34,14 +29,41 @@ blynk.last_activity = time()
 FIRST_BELOW_ZERO_TS=None
 IMAGE_INTERVAL=3600 #set to 1 hour but tested at 30 seconds
 
-# v1 is switch to turn off after inactivity
-@blynk.on("V1")
-def handle_v1_write(value):
-    button_value = value[0]
-    blynk.last_activity = time()  
-    print(f'Current button value: {button_value}')
-    if button_value=="1":
-       print(f"fake placeholder for now")  # placeholder for now, expand later
+FREEZE_THRESHOLD = 0.0 #when camera should be triggered
+SAFE_TEMP = 5.0
+
+new_env=None #will hold MQTT data
+
+#MQTT Callbacks
+#--------------------------------
+
+def on_connect(client, userdata, flags, rc):
+    print("MQTT connected with result code", rc)
+    client.subscribe(MQTT_TOPIC_UDP)
+    print("Subscribed to:", MQTT_TOPIC_UDP)
+
+
+def on_message(client, userdata, msg):
+    print("MQTT message on", msg.topic)
+    global new_env
+    payload_str = msg.payload.decode("utf-8")
+    data = json.loads(payload_str)  
+    # data["ts"] = int(time.time())
+
+    new_env=data #store MQTT data in global var - env
+
+    print(f"MQTT DATA:{data}")
+
+ # Set up MQTT client
+mqtt_client = mqtt.Client()
+mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message
+
+mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+mqtt_client.loop_start()  
+
+#Save Image to JSON
+#--------------------------------
 
 # Read environment stats from JSON file
 def read_state():
@@ -69,9 +91,8 @@ def save_image(image_url):
         json.dump(env, f, indent=2)
         print("State saved:", env)
 
-        # Publish to MQTT so Flask can subscribe
-        client.publish(MQTT_TOPIC_BLYNK, json.dumps(env))
-        print("MQTT published:", env)
+#Send Image Function
+#--------------------------------
 
 image_sent = False  # track if image has been sent already      
 
@@ -91,11 +112,6 @@ def send_image():
         # Save image URL to state JSON
         save_image(image_url_cloud)
 
-        # Publish state via MQTT
-        with open(STATE_PATH, 'r') as f:
-            payload = json.load(f)
-        client.publish(MQTT_TOPIC_BLYNK, json.dumps(payload))
-        print("MQTT event published:", payload)
 
         # Send image URL to Blynk virtual pin V2
         response = requests.get(
@@ -122,55 +138,57 @@ def send_image():
 # Main loop
 if __name__ == "__main__":
     print("Blynk application started. Listening for events...")
-
-    last_ts = 0  # track last JSON timestamp
+    current_ts=0 #initialise to prevent crash
+    last_ts=0
 
     try:
         while True:
-            env = read_state() 
-            current_ts = env.get("ts",0)  # get current timestamp from JSON
-            temp = env.get("temperature_c", 0.0)
-            dew_point = env.get("dew_point_c", 0.0)
+            if new_env is not None: #stop crash - don't read if None
+                env=new_env
+                current_ts = env.get("ts",0)  # get current timestamp from JSON
+                temp = env.get("temperature_c", 0.0)
+                dew_point = env.get("dew_point_c", 0.0)
+                last_ts = 0  # track last JSON timestamp
 
-            #if new update has occured
-            if current_ts != last_ts:
-                last_ts = current_ts  # update last timestamp
-                print(f"{env}")
-                led_green()  # indicate green LED
-                blynk.run()  # run Blynk process
-                blynk.virtual_write(0, temp)  # write temperature to Blynk
-                blynk.virtual_write(3, dew_point)  # write dew point to Blynk
+                #if new update has occured
+                if current_ts != last_ts:
+                    last_ts = current_ts  # update last timestamp
+                    print(f"{env}")
+                    led_green()  # indicate green LED
+                    blynk.run()  # run Blynk process
+                    blynk.virtual_write(0, temp)  # write temperature to Blynk
+                    blynk.virtual_write(3, dew_point)  # write dew point to Blynk
 
-                # Check for dew point warning
-                if dew_point < 13:
-                    blynk.log_event("warning_dew_point_event")
-                print(f"Dew Point: {dew_point}")
+                    # Check for dew point warning
+                    if dew_point < 13:
+                        blynk.log_event("warning_dew_point_event")
+                    print(f"Dew Point: {dew_point}")
 
-                temp_now=time() #set temp_now to current time
+                    temp_now=time() #set temp_now to current time
 
-                # Temperature warning
-                print(f"Temperature: {temp}°C")
-                if temp <= 0:
+                    # Temperature warning
+                    print(f"Temperature: {temp}°C")
+                    if temp <= FREEZE_THRESHOLD:
                 
-                    if FIRST_BELOW_ZERO_TS is None: #this only runs once - when temp_now is None
-                        FIRST_BELOW_ZERO_TS=temp_now #log time of temp falling below zero
-                        image_sent=False
-                        print(f"Temperature has fallen below zero: {datetime.fromtimestamp(FIRST_BELOW_ZERO_TS)} ")
-                        led_red()
-                        blynk.log_event("warning_temp_event")
-                        send_image()  # send camera image
-                        image_sent=True
+                        if FIRST_BELOW_ZERO_TS is None: #this only runs once - when temp_now is None
+                            FIRST_BELOW_ZERO_TS=temp_now #log time of temp falling below zero
+                            image_sent=False
+                            print(f"Temperature has fallen below zero: {datetime.fromtimestamp(FIRST_BELOW_ZERO_TS)} ")
+                            led_red()
+                            blynk.log_event("warning_temp_event")
+                            send_image()  # send camera image
+                            image_sent=True
                     
-                    #else if temp has fallen below zero already and current time - initial drop is >= interval
-                    elif FIRST_BELOW_ZERO_TS is not None and temp_now - FIRST_BELOW_ZERO_TS >= IMAGE_INTERVAL:
-                        FIRST_BELOW_ZERO_TS = temp_now #reset temp_now, triggered in another hour
-                        image_sent=False #set to False
-                        led_red()
-                        blynk.log_event("warning_temp_event") #send another warning
-                        send_image() #send another image
-                        image_sent=True
-                elif temp > 5:
-                    FIRST_BELOW_ZERO_TS = None #is temp raises into a safe temp zone then FIRST_BELOW_ZERO resets to None
+                        #else if temp has fallen below zero already and current time - initial drop is >= interval
+                        elif FIRST_BELOW_ZERO_TS is not None and temp_now - FIRST_BELOW_ZERO_TS >= IMAGE_INTERVAL:
+                            FIRST_BELOW_ZERO_TS = temp_now #reset temp_now, triggered in another hour
+                            image_sent=False #set to False
+                            led_red()
+                            blynk.log_event("warning_temp_event") #send another warning
+                            send_image() #send another image
+                            image_sent=True
+                    elif temp >= SAFE_TEMP:
+                        FIRST_BELOW_ZERO_TS = None #is temp raises into a safe temp zone then FIRST_BELOW_ZERO resets to None
 
             now = time()
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
@@ -179,8 +197,5 @@ if __name__ == "__main__":
             sleep(2)
     except KeyboardInterrupt:
         print("Blynk application stopped.")
-    finally:
-        # Stop MQTT loop and disconnect
-        client.loop_stop()
-        client.disconnect()
-        print("MQTT client disconnected.")
+   
+    
