@@ -35,6 +35,7 @@ def generate_chart():
     x = []
     y_temperature = []
     y_dew_point = []
+    y_humidity = []
 
 
     # open CSV and read data
@@ -45,11 +46,12 @@ def generate_chart():
             print(f"reading row?: {row}")
 
             
-            if row[0] and row[2] and row[5]:
+            if row[0] and row[1] and row[2] and row[5]:
                 try:
                     x.append(datetime.fromisoformat(row[5]))        # ISO timestamp column on x-axis, 5 index
                     y_temperature.append(float(row[0]))            # temperature on y-aaxis, 0 index in csv
                     y_dew_point.append(float(row[2]))               # dew_point - y, 2nd index in csv
+                    y_humidity.append(float(row[1]))              # dew_point - y, 2nd index in csv
                 except Exception as e:
                     print(f"error {e} has occured. skip row")
 
@@ -64,6 +66,8 @@ def generate_chart():
             label="Temperature °C", linewidth=1)
     plt.plot(x, y_dew_point, color='b', linestyle='-', marker=None,
             label="Dew Point °C", linewidth=1)
+    plt.plot(x, y_humidity, color='g', linestyle='-', marker=None,
+            label="Humidity %", linewidth=1)
 
     # format x-axis labels
     plt.xticks(rotation=25)
