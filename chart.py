@@ -1,7 +1,7 @@
 import matplotlib
 matplotlib.use("Agg")
 from matplotlib import pyplot as plt
-
+import matplotlib.dates as mdates
 
 from datetime import datetime
 import pandas as pd
@@ -69,6 +69,7 @@ def generate_chart():
     plt.plot(x, y_humidity, color='g', linestyle='-', marker=None,
             label="Humidity %", linewidth=1)
 
+    
     # format x-axis labels
     plt.xticks(rotation=25)
     plt.xlabel('Time')
@@ -77,6 +78,13 @@ def generate_chart():
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
+
+    #format x-axis time series
+    ax = plt.gca()
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d %H:%M'))
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())  # auto chooses day/hour/minute ticks
+    plt.xticks(rotation=25, ha='right')
+    plt.gcf().autofmt_xdate()
 
     # save the chart as a PNG in static folder
     plt.savefig(CHART_PATH)
