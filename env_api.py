@@ -3,12 +3,18 @@ from flask_cors import CORS
 import os, json, time
 from datetime import datetime
 import json
-import paho.mqtt.client as mqtt
 from chart import generate_chart
+
+import paho.mqtt.client as mqtt 
 
 #import thread for chart process
 from threading import Thread
 import time
+
+#MQTT configuration - subscriber
+MQTT_BROKER = "broker.hivemq.com"
+MQTT_PORT = 1883
+MQTT_TOPIC_UDP = "/orla/env/udp"
 
 #determine base folder where script is running - the absolute path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
@@ -31,11 +37,38 @@ CHART_PATH = os.path.join(STATIC_PATH, "temp_and_dew_point.png")
 app = Flask(__name__)
 CORS(app)
 
-MQTT_BROKER = "broker.hivemq.com"
-MQTT_PORT = 1883
-MQTT_TOPIC_BLYNK = "/orla/env/now" 
+new_env=None #will hold MQTT data
 
-# Read environment stats from JSON file
+#MQTT Callbacks
+#--------------------------------
+
+def on_connect(client, userdata, flags, rc):
+    print("MQTT connected with result code", rc)
+    client.subscribe(MQTT_TOPIC_UDP)
+    print("Subscribed to:", MQTT_TOPIC_UDP)
+
+
+def on_message(client, userdata, msg):
+    print("MQTT message on", msg.topic)
+    global new_env
+    payload_str = msg.payload.decode("utf-8")
+    data = json.loads(payload_str)  
+    # data["ts"] = int(time.time())
+
+    new_env=data #store MQTT data in global var - env
+
+    print(f"MQTT DATA:{data}")
+
+ # Set up MQTT client
+mqtt_client = mqtt.Client()
+mqtt_client.on_connect = on_connect
+mqtt_client.on_message = on_message
+
+mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
+mqtt_client.loop_start()  
+
+#JSON File
+#--------------------------------
 def read_state():
     try:
         with open(STATE_PATH, "r") as f:
@@ -53,70 +86,44 @@ def save_state(chart_url=None):
 
    # always update chart
    if chart_url:
-       env["chart"] = chart_url  # store image URL as string
+        env["chart"] = chart_url  # store image URL as string
+        # Add/Update timestamps
+        env["chart_ts"] = int(datetime.now().timestamp())
+        env["chart_iso"] = datetime.now().isoformat(timespec="seconds")
 
-   # Add/Update timestamps
-   env["chart_ts"] = int(datetime.now().timestamp())
-   env["chart_iso"] = datetime.now().isoformat(timespec="seconds")
-
-   try:
-       with open(STATE_PATH, "w") as f:
-           json.dump(env, f, indent=2)
-       print("State saved:", env)
-   except Exception as e:
-       print("Error saving state:", e)
-
-       save_state(env)  # persist JSON state
+        with open(STATE_PATH, "w") as f:
+            json.dump(env, f, indent=2)
+            print("State saved:", env)
     
 @app.route('/api/environment',methods=['GET'])
 def current_environment():
-    env = read_state()
-    
-    return {
-        "temperature_c": env["temperature_c"],
-        "humidity_percent": env["humidity_%"],
-        "dew_point_c": env["dew_point_c"],
-        "timestamp": env["iso"],
-        "image": env.get("image"),
-        "image_iso": env.get("image_iso"),
-        "image_ts": env.get("image_ts"),
-        "chart": env.get("chart")
-    }
+        if new_env is not None: #stop crash - don't read if None
+            env_data=new_env #getting env data from MQTT
+
+            return {
+                "temperature_c": env_data.get("temperature_c"),
+                "humidity_%": env_data.get("humidity_%"),
+                "dew_point_c":env_data.get("dew_point_c"),
+                "last_update":env_data.get("last_update"),
+                "ts": env_data.get("ts"),
+                "iso": env_data.get("iso"),
+                "image": env_data.get("image"),
+                "chart": env_data.get("chart")
+        
+                }
+            
+           
 
 @app.route('/') 
 def index():
-   env = read_state()
+    global new_env
+    if new_env is not None:
+        env = new_env
 
 
-   return render_template("status.html", env=env) 
+    return render_template("status.html", env=env) 
 
-
-#MQTT CALLBACKS
-
-def on_connect(client, userdata, flags, rc):
-    print("MQTT connected with result code", rc)
-    client.subscribe(MQTT_TOPIC_BLYNK)
-    print("Subscribed to:", MQTT_TOPIC_BLYNK)
-
-
-def on_message(client, userdata, msg):
-    print("MQTT message on", msg.topic)
-    payload_str = msg.payload.decode("utf-8")
-    data = json.loads(payload_str)  
-    data["ts"] = int(time.time())
-
-    with open(STATE_PATH, "w") as f:
-        json.dump(data, f)
-    print("State updated:", data)
-   
        
-# Set up MQTT client
-mqtt_client = mqtt.Client()
-mqtt_client.on_connect = on_connect
-mqtt_client.on_message = on_message
-
-mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-mqtt_client.loop_start()  # run MQTT network loop in background thread
 
 #generate chart every 30 seconds without blocking flask with threading
 #chart responds to csv updates
