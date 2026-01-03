@@ -1,6 +1,7 @@
 from sensor_listener import SensorListener
 import json, math, os, time
 from json_to_csv import save_csv
+import paho.mqtt.client as mqtt
 
 #path to json file
 STATE_PATH = "state/environment.json"
@@ -9,6 +10,16 @@ os.makedirs(os.path.dirname(STATE_PATH), exist_ok=True)
 #path to csv file
 CSV_PATH = "processing_data/env_data.csv"
 os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
+
+# MQTT configuration
+MQTT_BROKER = "broker.hivemq.com"
+MQTT_PORT = 1883
+MQTT_TOPIC_UDP = "/orla/env/udp"  
+
+# Connect MQTT client
+client = mqtt.Client()
+client.connect(MQTT_BROKER, MQTT_PORT, 60)
+client.loop_start()
 
 env_state = {
     "temperature_c": None,
@@ -32,7 +43,8 @@ def save_state():
     if os.path.exists(STATE_PATH):
         with open(STATE_PATH, "r") as f:
             old = json.load(f)
-        env_state["image"] = old.get("image")  # keep current image for now
+        #preserve chart and image fields 
+        env_state["image"] = old.get("image")  # keep current image 
         env_state["chart"] = old.get("chart") # keep current chart
     env_state["ts"] = int(time.time())
     env_state["iso"] = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
@@ -62,6 +74,10 @@ def handle_data(data):
         #
         save_csv(env_state)
 
+        # Publish to MQTT 
+        client.publish(MQTT_TOPIC_UDP, json.dumps(env_state))
+        print("MQTT published:", env_state)
+
 if __name__ == "__main__":
     listener = SensorListener(port=5000)
     listener.callback = handle_data
@@ -73,3 +89,8 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         listener.stop()
         print("Listener Service stopped")
+    finally:
+        # Stop MQTT loop and disconnect
+        client.loop_stop()
+        client.disconnect()
+        print("MQTT client disconnected.")
