@@ -169,7 +169,7 @@ if __name__ == "__main__":
                     # Temperature warning
                     print(f"Temperature: {temp}°C")
                     if temp <= FREEZE_THRESHOLD:
-                
+                        led_red()
                         if FIRST_BELOW_ZERO_TS is None: #this only runs once - when temp_now is None
                             FIRST_BELOW_ZERO_TS=temp_now #log time of temp falling below zero
                             image_sent=False
@@ -189,6 +189,7 @@ if __name__ == "__main__":
                             image_sent=True
                     elif temp >= SAFE_TEMP:
                         FIRST_BELOW_ZERO_TS = None #is temp raises into a safe temp zone then FIRST_BELOW_ZERO resets to None
+                        led_green()
 
             now = time()
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
