@@ -5,6 +5,8 @@ from datetime import datetime
 
 from picamera2 import Picamera2
 
+picam2 = Picamera2()
+
 
 #use os to set up base and static folder 
 
@@ -18,14 +20,11 @@ os.makedirs(STATIC_DIR, exist_ok=True)
 #set image path - to add image to static_dir folder
 IMAGE_PATH = os.path.join(STATIC_DIR, "last_env_image.jpg")
 
-picam2=None #camera doesn't start on boot
-
 
 # initialise camera, capture photo and save to image_path when called
 def capture_photo():
         try:
-            picam2 = Picamera2()
-            #size: HD camera resolution
+            # #size: HD camera resolution
             picam2.configure(picam2.create_still_configuration(main={"size": (1280,720)}))
             picam2.start()
             print("Camera started. Image will be taken once temperature drops")

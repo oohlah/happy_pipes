@@ -1,7 +1,6 @@
 import BlynkLib, os
 from time import time, sleep
 from datetime import datetime
-
 from upload_cloudinary import upload_image
 import json
 from environment_sensors import led_green, led_red
@@ -29,8 +28,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_PATH = os.path.join(BASE_DIR, "state", "environment.json") # safely join base with json file
 
 # Reading every 30 seconds
-INACTIVITY_TIMEOUT = 30
+INACTIVITY_TIMEOUT = 30 #tested at 60 seconds
 blynk.last_activity = time()
+
+FIRST_BELOW_ZERO_TS=None
+IMAGE_INTERVAL=3600 #set to 1 hour but tested at 30 seconds
 
 # v1 is switch to turn off after inactivity
 @blynk.on("V1")
@@ -41,57 +43,41 @@ def handle_v1_write(value):
     if button_value=="1":
        print(f"fake placeholder for now")  # placeholder for now, expand later
 
-image_sent = False  # track if image has been sent already
-
 # Read environment stats from JSON file
 def read_state():
     try:
         with open(STATE_PATH, "r") as f:
             return json.load(f)
     except json.decoder.JSONDecodeError:
-        print("There was a problem accessing json data.")  # debug info
-        # Reset json to write
+        print("There was a problem accessing json data.")  
+        # reset json to write
         with open(STATE_PATH, "w") as f:
             json.dump({}, f)
         return {}  # Return empty dict so code doesn't crash
 
-# Save new env_state with URL of image once taken
-def save_state(image_url=None):
-   env = read_state() or {}
 
-   # update image if it is not empty
-   if image_url is not None:
-       env["image"] = image_url  # store image URL as string
+# save new env_state with URL of image once taken
+def save_image(image_url):
+    env = read_state() or {}
 
-   # Add/Update timestamps
-   env["image_ts"] = int(datetime.now().timestamp())
-   env["image_iso"] = datetime.now().isoformat(timespec="seconds")
+   # keep existing image - stops rewriting to None
+    env["image"] = image_url  # store image URL as string
+    env["image_ts"] = int(time())
+    env["image_iso"] = datetime.now().isoformat(timespec="seconds")
 
-   try:
-       with open(STATE_PATH, "w") as f:
-           json.dump(env, f, indent=2)
-       print("State saved:", env)
-   except Exception as e:
-       print("Error saving state:", e)
-
-# Update state regularly to JSON and publish via MQTT to Flask app
-def update_state(sensor_data=None):
-    env = read_state()
-    env["ts"] = int(datetime.now().timestamp())
-    env["iso"] = datetime.now().isoformat(timespec="seconds")
-
-    if sensor_data: 
-        env=read_state()  # update with latest sensor data
-
-        save_state(env)  # persist JSON state
+    with open(STATE_PATH, "w") as f:
+        json.dump(env, f, indent=2)
+        print("State saved:", env)
 
         # Publish to MQTT so Flask can subscribe
         client.publish(MQTT_TOPIC_BLYNK, json.dumps(env))
         print("MQTT published:", env)
 
+image_sent = False  # track if image has been sent already      
+
 # Function to send camera image via Blynk API
 def send_image():
-    global image_sent
+    global image_sent #image sent flag prevents images from being taken repeatedly
 
     # Only send once per event
     if image_sent:
@@ -103,7 +89,7 @@ def send_image():
         # Upload to Cloudinary and get URL
         image_url_cloud = upload_image(image_path)
         # Save image URL to state JSON
-        save_state(image_url_cloud)
+        save_image(image_url_cloud)
 
         # Publish state via MQTT
         with open(STATE_PATH, 'r') as f:
@@ -123,7 +109,7 @@ def send_image():
         print(f"Status: {response.status_code}, response: {response.text}")
 
         if response.status_code == 200:
-            image_sent = True
+             image_sent = True
         else:
             print(f"Failed to send image. Will retry later")
             sleep(10)
@@ -146,9 +132,7 @@ if __name__ == "__main__":
             temp = env.get("temperature_c", 0.0)
             dew_point = env.get("dew_point_c", 0.0)
 
-            # Update JSON with latest readings
-            update_state(sensor_data={"temperature_c": temp, "dew_point_c": dew_point})
-
+            #if new update has occured
             if current_ts != last_ts:
                 last_ts = current_ts  # update last timestamp
                 print(f"{env}")
@@ -162,12 +146,31 @@ if __name__ == "__main__":
                     blynk.log_event("warning_dew_point_event")
                 print(f"Dew Point: {dew_point}")
 
+                temp_now=time() #set temp_now to current time
+
                 # Temperature warning
                 print(f"Temperature: {temp}°C")
                 if temp <= 0:
-                    led_red()
-                    blynk.log_event("warning_temp_event")
-                    send_image()  # send camera image
+                
+                    if FIRST_BELOW_ZERO_TS is None: #this only runs once - when temp_now is None
+                        FIRST_BELOW_ZERO_TS=temp_now #log time of temp falling below zero
+                        image_sent=False
+                        print(f"Temperature has fallen below zero: {datetime.fromtimestamp(FIRST_BELOW_ZERO_TS)} ")
+                        led_red()
+                        blynk.log_event("warning_temp_event")
+                        send_image()  # send camera image
+                        image_sent=True
+                    
+                    #else if temp has fallen below zero already and current time - initial drop is >= interval
+                    elif FIRST_BELOW_ZERO_TS is not None and temp_now - FIRST_BELOW_ZERO_TS >= IMAGE_INTERVAL:
+                        FIRST_BELOW_ZERO_TS = temp_now #reset temp_now, triggered in another hour
+                        image_sent=False #set to False
+                        led_red()
+                        blynk.log_event("warning_temp_event") #send another warning
+                        send_image() #send another image
+                        image_sent=True
+                elif temp > 5:
+                    FIRST_BELOW_ZERO_TS = None #is temp raises into a safe temp zone then FIRST_BELOW_ZERO resets to None
 
             now = time()
             if now - blynk.last_activity > INACTIVITY_TIMEOUT:
