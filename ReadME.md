@@ -238,3 +238,7 @@ def current_environment():
 
 ```
 
+#### RESOURCES
+
+You Tube Video: https://youtu.be/gR1MWZNofy4
+
