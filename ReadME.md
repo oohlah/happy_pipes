@@ -4,10 +4,19 @@ Happy Pipes
 
 ### Description:
 
+Happy Pipes is an end-to-end IoT monitoring system designed to simulate and manage environmental conditions affecting outdoor plumbing systems, such as exposed pipes at risk of freezing or condensation. The project combines simulated sensors, physical hardware, networking protocols, cloud services, and user-facing dashboards to demonstrate a realistic IoT architecture.
 
+A Cisco Packet Tracer simulation models environmental temperature sensors and a heating device relevant to outdoor pipe protection. Sensor telemetry is transmitted via UDP to a Raspberry Pi acting as an edge device. The Pi processes incoming data, calculates derived metrics such as dew point, and coordinates system behaviour based on environmental risk conditions.
+
+Sensor data is distributed using MQTT to multiple consumers, including a web dashboard and the Blynk mobile application. The system supports real-time monitoring, historical data analysis, automated alerts, and image capture. A Flask-based web interface is deployed on Render, providing public access to live readings, historical charts, and captured images. Cloud services are used for image and chart storage, while mobile notifications ensure users are alerted to conditions that may impact outdoor plumbing. The project demonstrates how simulated environments can be effectively integrated with physical devices and cloud platforms.
 
 ### Usage:
 
+![Packet Tracer – Simulated Temperature Environment](packet_tracer/simulate_temp.png)
+
+A simulated IoT environment was created in Cisco Packet Tracer to model temperature sensors and a heating device. Sensor telemetry is sent via UDP to a Raspberry Pi listener service, bridging simulated devices with physical hardware. This data is then published via MQTT to a web dashboard, which displays live environmental readings, up-to-date historical graphs, and urgent environmental conditions.
+
+The same MQTT data is also sent to the Blynk mobile application for real-time monitoring. If the heating system fails to activate when the temperature drops to ≤ 1 °C, the Raspberry Pi camera captures an image and a low-temperature alert is triggered. A dew point alert is also generated when the dew point falls to ≤ 13 °C. In both cases, increasing the heating resolves the alert condition. The user is notified directly on their phone and receives an email prompting them to view the Blynk app or the Happy Pipes web dashboard to review current conditions and urgent images.
 
 ### Examples:
 
