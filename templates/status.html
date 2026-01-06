@@ -3,22 +3,22 @@
 <html>
 
 <head>
-    <title>Environment Data</title>
+    <title>Happy Pipes</title>
     <link href="https://mattduck.github.io/generic-css/css/generic-light.min.css" rel="stylesheet" type="text/css"/> 
     <meta http-equiv="refresh" content="5">
 </head>
 
 <body>
-    <h1>Environment Data Summary</h1>
+    <h1>Happy Pipes</h1>
 
     
-    <p>Most Recent Tempearture Reading:</p>
+    <p>Most Recent Evironment Readings:</p>
     <p><strong>Temperature:</strong> {{ env['temperature_c'] }} ° C</p>
     <p><strong>Humidity:</strong> {{ env['humidity_%'] }} %</p>
     <p><strong>Dew Point:</strong> {{ env['dew_point_c'] }} ° C</p>
 
 
-    <h2>Temperature History</h2> 
+    <h2>Evironment History</h2> 
 
 <!-- #latest chart image from cloudinary -->
         {% if env.chart %}
@@ -31,7 +31,7 @@
 
     <h2>Environment Image</h2>
         {% if env and env.image %}
-        <p> Last Urgent Image Update: <strong>{{ env.iso }}</strong></p>
+        <p> Last Urgent Image Update: 
 
         <!-- //latest image from cloudinary -->
         <img src="{{ env.image }}"
