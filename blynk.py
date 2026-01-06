@@ -23,14 +23,16 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATE_PATH = os.path.join(BASE_DIR, "state", "environment.json") # safely join base with json file
 
 # Reading every 30 seconds
-INACTIVITY_TIMEOUT = 30 #tested at 60 seconds
+INACTIVITY_TIMEOUT = 200 #Would be 3600 - 1 hour
 blynk.last_activity = time()
 
 FIRST_BELOW_ZERO_TS=None
-IMAGE_INTERVAL=3600 #set to 1 hour but tested at 30 seconds
+IMAGE_INTERVAL=70 #hould be 1 hour
 
 FREEZE_THRESHOLD = 0.0 #when camera should be triggered
 SAFE_TEMP = 5.0
+
+MOLD_RISK_DEW_POINT = 13.0 
 
 new_env=None #will hold MQTT data
 
@@ -150,17 +152,18 @@ if __name__ == "__main__":
                 dew_point = env.get("dew_point_c", 0.0)
                 last_ts = 0  # track last JSON timestamp
 
+        
                 #if new update has occured
                 if current_ts != last_ts:
                     last_ts = current_ts  # update last timestamp
                     print(f"{env}")
                     led_green()  # indicate green LED
-                    blynk.run()  # run Blynk process
+                    blynk.run()  # run Blynk process 
                     blynk.virtual_write(0, temp)  # write temperature to Blynk
                     blynk.virtual_write(3, dew_point)  # write dew point to Blynk
 
                     # Check for dew point warning
-                    if dew_point < 13:
+                    if dew_point < MOLD_RISK_DEW_POINT:
                         blynk.log_event("warning_dew_point_event")
                     print(f"Dew Point: {dew_point}")
 
@@ -184,8 +187,8 @@ if __name__ == "__main__":
                             FIRST_BELOW_ZERO_TS = temp_now #reset temp_now, triggered in another hour
                             image_sent=False #set to False
                             led_red()
-                            blynk.log_event("warning_temp_event") #send another warning
                             send_image() #send another image
+                            blynk.log_event("warning_still_temp_event") #send another warning
                             image_sent=True
                     elif temp >= SAFE_TEMP:
                         FIRST_BELOW_ZERO_TS = None #is temp raises into a safe temp zone then FIRST_BELOW_ZERO resets to None
