@@ -1,12 +1,7 @@
-# import os allows you to interact with the underlying os
-
 import time, os
 from datetime import datetime
 
 from picamera2 import Picamera2
-
-picam2 = Picamera2()
-
 
 #use os to set up base and static folder 
 
@@ -24,6 +19,7 @@ IMAGE_PATH = os.path.join(STATIC_DIR, "last_env_image.jpg")
 # initialise camera, capture photo and save to image_path when called
 def capture_photo():
         try:
+            picam2 = Picamera2()
             # #size: HD camera resolution
             picam2.configure(picam2.create_still_configuration(main={"size": (1280,720)}))
             picam2.start()
@@ -33,10 +29,12 @@ def capture_photo():
             time.sleep(0.3)
             print("Image Saved to: ", IMAGE_PATH)
             picam2.stop()
+            picam2.close()
             return IMAGE_PATH
         except Exception as e:  # catch any error
             print(f"Camera error: {e}")
             time.sleep(1)
-        raise Exception("Failed to capture image")
+            raise Exception("Failed to capture image")
 
-
+       
+            

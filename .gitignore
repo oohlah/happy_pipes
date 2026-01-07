@@ -6,3 +6,9 @@ static/last_env_image.jpg
 
 #ignore test files .pyc
 __pycache__/*.pyc
+
+#ignore all chart images
+static/*.png
+
+# ignore generated data
+processing_data/*.csv

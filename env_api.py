@@ -74,7 +74,7 @@ def read_state():
         with open(STATE_PATH, "r") as f:
             return json.load(f)
     except json.decoder.JSONDecodeError:
-        print("There was a problem accessing json data.")  # debug info
+        print("There was a problem accessing json data.") #mismatch data error
         # Reset json to write
         with open(STATE_PATH, "w") as f:
             json.dump({}, f)
@@ -82,10 +82,11 @@ def read_state():
 
 # Save new env_state with URL of image once taken
 def save_state(chart_url=None):
-   env = read_state() or {}
+    env = read_state() or {}
+    
 
    # always update chart
-   if chart_url:
+    if chart_url:
         env["chart"] = chart_url  # store image URL as string
         # Add/Update timestamps
         env["chart_ts"] = int(datetime.now().timestamp())
@@ -144,4 +145,6 @@ t.start()
 
 #Run API on port 8000
 app.run(host='0.0.0.0', port=8000) 
+
+
 

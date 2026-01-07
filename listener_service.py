@@ -2,6 +2,7 @@ from sensor_listener import SensorListener
 import json, math, os, time
 from json_to_csv import save_csv
 import paho.mqtt.client as mqtt
+import time
 
 #path to json file
 STATE_PATH = "state/environment.json"
@@ -43,11 +44,11 @@ def save_state():
     if os.path.exists(STATE_PATH):
         with open(STATE_PATH, "r") as f:
             old = json.load(f)
-        #preserve chart and image fields 
         env_state["image"] = old.get("image")  # keep current image 
         env_state["chart"] = old.get("chart") # keep current chart
     env_state["ts"] = int(time.time())
     env_state["iso"] = time.strftime("%Y-%m-%dT%H:%M:%S", time.localtime())
+
     with open(STATE_PATH, "w") as f:
         json.dump(env_state, f, indent=2)
 
