@@ -256,7 +256,7 @@ def current_environment():
 
 - Computer System Assignment 2 Template: [(PDF)](docs/IOT_assignment_template_orla_fitzgerald.pdf)
 
-- Project Presentation: (docs/IOT_assignment_presentation_orla_fitzgerald.pdf)
+- Project Presentation: [(PDF)](docs/IOT_assignment_presentation_orla_fitzgerald.pdf)
 
 - Link to Render 'Happy Pipes' Website: https://happy-pipes.onrender.com
 
