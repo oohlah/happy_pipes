@@ -98,8 +98,7 @@ def save_state(chart_url=None):
     
 @app.route('/api/environment',methods=['GET'])
 def current_environment():
-            if new_env is not None: #stop crash - don't read if None
-                env_data=new_env or {} #getting env data from MQTT
+            env_data = new_env or {}  # fallback to empty dict
 
 
             return {
@@ -119,8 +118,7 @@ def current_environment():
 @app.route('/') 
 def index():
     global new_env
-    if new_env is not None:
-        env = new_env
+    env = new_env or {}  # fallback to empty dict if new_env is None
 
 
     return render_template("status.html", env=env) 
