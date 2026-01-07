@@ -238,7 +238,91 @@ def current_environment():
 
 ```
 
+#### Dependecies
+
+- Flask
+- gunicorn 
+- flask-cors
+- matplotlib
+- Blynklib
+- requests 
+- cloudinary
+- pandas
+- paho-mqtt
+
 #### RESOURCES
 
-You Tube Video: https://youtu.be/gR1MWZNofy4
+- You Tube Video: https://youtu.be/gR1MWZNofy4
+
+- Computer System Assignment 2 Template: [(PDF)](docs/IOT_assignment_template_orla_fitzgerald.pdf)
+
+- Project Presentation: (docs/IOT_assignment_presentation_orla_fitzgerald.pdf)
+
+- Link to Render 'Happy Pipes' Website: https://happy-pipes.onrender.com
+
+#### REFERENCES
+
+Calculation to get dewpoint https://gist.github.com/sourceperl/45587ea99ff123745428 
+
+Global variables/ booleans in functions in python https://www.geeksforgeeks.org/python/global-local-variables-python/ 
+
+Python booleans -true/false:
+https://realpython.com/python-boolean/#the-not-boolean-operator
+
+Http API request String formatting https://docs.blynk.io/en/blynk.apps/widgets-displays/image-gallery 
+
+Load, save to json
+https://realpython.com/python-json/ 
+
+Using None for handling missing data
+https://www.datacamp.com/tutorial/python-none 
+
+Requests library/ send get request in python 
+https://mimo.org/glossary/python/requests-library 
+
+Creating and pulling data from a dictionary
+https://www.codecademy.com/learn/learn-python-3/modules/learn-python3-dictionaries/cheatsheet
+
+SBC board configuration in packet tracer https://www.packettracernetwork.com/internet-of-things/pt7-iot-devices-configuration.html 
+
+Video used for Cisco setup
+https://www.youtube.com/watch?v=ZV_6sPI9p90 
+
+Chart - Append to csv without headers - a mode
+https://medium.com/@robblatt/use-python-and-pandas-to-append-to-a-csv-503bf22670ce
+
+Using os.path.join to join base and paths
+https://www.geeksforgeeks.org/python/python-os-path-join-method/
+
+Plot chart matplotlib
+https://realpython.com/pandas-plot-python/?utm_source=chatgpt.com#set-up-your-environment
+
+
+How to plot chart:
+https://www.geeksforgeeks.org/python/visualize-data-from-csv-file-in-python/
+
+Post method for API endpoint - structuring json
+https://syskool.com/building-rest-apis-with-flask-a-step-by-step-guide/
+
+Json - decoder error - mismatch data when loading:
+https://www.geeksforgeeks.org/python/json-parsing-errors-in-python/
+
+Video used to help get chart.py to work with web flask - plt.switch_backend('Agg'):
+https://www.youtube.com/watch?v=wGL076sKapI 
+
+Auto-refresh in html
+https://www.geeksforgeeks.org/javascript/how-to-automatic-refresh-a-web-page-in-fixed-time/
+
+Threading to run a function in main in env_api
+https://stackoverflow.com/questions/67598926/run-a-function-in-background-using-thread-in-flask
+
+Append chart url to json file:
+https://www.geeksforgeeks.org/python/append-to-json-file-using-python/
+
+ 
+Plotting of x-axis on chart as dates:
+https://medium.com/@jaaeehoonkim/example-of-matplotlib-graph-plots-and-about-fitting-the-date-index-97c709ab869f
+
+
+
 
