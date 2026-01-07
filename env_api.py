@@ -98,8 +98,9 @@ def save_state(chart_url=None):
     
 @app.route('/api/environment',methods=['GET'])
 def current_environment():
-        if new_env is not None: #stop crash - don't read if None
-            env_data=new_env #getting env data from MQTT
+            if new_env is not None: #stop crash - don't read if None
+                env_data=new_env or {} #getting env data from MQTT
+
 
             return {
                 "temperature_c": env_data.get("temperature_c"),
