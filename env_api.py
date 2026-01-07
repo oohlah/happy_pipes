@@ -98,7 +98,7 @@ def save_state(chart_url=None):
     
 @app.route('/api/environment',methods=['GET'])
 def current_environment():
-            env_data = new_env or {}  # fallback to empty dict
+            env_data = new_env or {}  # Use MQTT data or fallback to empty dict
 
 
             return {

@@ -220,8 +220,8 @@ This Flask endpoint provides live sensor data directly from MQTT messages sent b
 ```py
 @app.route('/api/environment',methods=['GET'])
 def current_environment():
-        if new_env is not None: #stop crash - don't read if None
-            env_data=new_env #getting env data from MQTT
+            env_data = new_env or {}  # Use MQTT data or fallback to empty dict
+
 
             return {
                 "temperature_c": env_data.get("temperature_c"),
@@ -234,6 +234,8 @@ def current_environment():
                 "chart": env_data.get("chart")
         
                 }
+            
+           
 
 
 ```
