@@ -22,12 +22,13 @@ blynk = BlynkLib.Blynk(BLYNK_AUTH)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
 STATE_PATH = os.path.join(BASE_DIR, "state", "environment.json") # safely join base with json file
 
-# Reading every 30 seconds
-INACTIVITY_TIMEOUT = 200 #Would be 3600 - 1 hour
+# There would be no INACTIVITY_TIMEOUT / (All of the Time - systemd) to trigger hourly 
+# alert in real world, but run at 200 to show a micro test
+INACTIVITY_TIMEOUT = 200 
 blynk.last_activity = time()
 
 FIRST_BELOW_ZERO_TS=None
-IMAGE_INTERVAL=70 #hould be 1 hour
+IMAGE_INTERVAL=3600 # One hour image interval. I run for 70 seconds in presentation so that alerts are triggered twice before INACTIVITY_TIMEOUT
 
 FREEZE_THRESHOLD = 0.0 #when camera should be triggered
 SAFE_TEMP = 5.0
