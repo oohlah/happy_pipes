@@ -14,7 +14,7 @@ Sensor data is distributed using MQTT to multiple consumers, including a web das
 
 ![Packet Tracer – Simulated Temperature Environment](packet_tracer/simulate_temp.png)
 
-- Link to Packet Tracer Simulation File: [(PDF)](packet_tracer/simulate_temp.pkt)
+- Link to Packet Tracer Simulation File: [(PKT)](packet_tracer/simulate_temp.pkt)
 
 A simulated IoT environment was created in Cisco Packet Tracer to model temperature sensors and a heating device. Sensor telemetry is sent via UDP to a Raspberry Pi listener service, bridging simulated devices with physical hardware. This data is then published via MQTT to a web dashboard, which displays live environmental readings, up-to-date historical graphs, and urgent environmental conditions.
 
